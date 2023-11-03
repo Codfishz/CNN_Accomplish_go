@@ -1,7 +1,8 @@
 package main
 
 type Tensor struct {
-	Data     [][]float32
-	Shape    []int
-	DataType string
+	//first dimension for batch size
+	//second dimentsion for channel number
+	//third and fourth dimentsion for width and height
+	Data [][][][]float32
 }
