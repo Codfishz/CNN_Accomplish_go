@@ -97,3 +97,103 @@ func (pool *Pooling) Backward(delta [][][][]float32) [][][][]float32 {
 
 	return dx.Data
 }
+
+// // Testing max pooling
+// // Put this under main.go
+// import(
+// 	"fmt"
+// )
+
+// func main() {
+// 	// Create an instance of the pooling layer
+// 	pool := &Pooling{}
+
+// 	// Sample input data (batch size: 1, channels: 1, height: 4, width: 4)
+// 	input := [][][][]float32{
+// 		{
+// 			{
+// 				{1, 2, 1, 4},
+// 				{2, 3, 2, 1},
+// 				{4, 3, 1, 2},
+// 				{1, 4, 3, 2},
+// 			},
+// 		},
+
+// 		{
+// 			{
+// 				{3, 1, 0, 0},
+// 				{1, 6, 0, 2},
+// 				{1, 1, 1, 3},
+// 				{1, 1, 3, 1},
+// 			},
+// 		},
+// 	}
+
+// 	// Perform forward max pooling
+// 	output := pool.Forward(input)
+
+// 	// Display the input and output
+// 	fmt.Println("Input:")
+// 	for i := 0; i < len(input); i++ {
+// 		fmt.Println("Image", i+1)
+// 		printData(input[i][0])
+// 	}
+
+// 	fmt.Println("\nOutput (Max Pooled):")
+// 	for i := 0; i < len(output); i++ {
+// 		fmt.Println("Image", i+1)
+// 		printData(output[i][0])
+// 	}
+
+// 	// Display the feature mask
+// 	fmt.Println("\nFeature Mask:")
+// 	for i := 0; i < len(pool.FeatureMask.Data); i++ {
+// 		fmt.Println("Image", i+1)
+// 		printData(pool.FeatureMask.Data[i][0])
+// 	}
+	
+// 	delta := [][][][]float32{
+// 		{
+// 			{
+// 				{1, 2},
+// 				{2, 3},
+// 			},
+// 		},
+
+// 		{
+// 			{
+// 				{3, 1},
+// 				{1, 6},
+// 			},
+// 		},
+// 	}
+
+// 	// Perform backward max pooling
+// 	dx := pool.Backward(delta)
+
+// 	// Display input delta
+// 	fmt.Println("\nInput Delta:")
+// 	for i := 0; i < len(delta); i++ {
+// 		fmt.Println("Image", i+1)
+// 		printData(delta[i][0])
+// 	}
+
+// 	// Display the gradient
+// 	fmt.Println("\nGradient:")
+// 	for i := 0; i < len(dx); i++ {
+// 		fmt.Println("Image", i+1)
+// 		printData(dx[i][0])
+// 	}
+
+
+// }
+
+// // Function to print a 2D slice of data
+// func printData(data [][]float32) {
+// 	for i := 0; i < len(data); i++ {
+// 		for j := 0; j < len(data[i]); j++ {
+// 			fmt.Printf("%.1f ", data[i][j])
+// 		}
+// 		fmt.Println()
+// 	}
+// }
