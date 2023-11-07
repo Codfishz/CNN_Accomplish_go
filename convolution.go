@@ -2,8 +2,8 @@
 // Final Project: Construct Convolutional Neural Network From Scratch Using GOlang
 // This script contains methods for both "Forward" convolution and "Backward" gradient propogation
 // It also contains all necessary helper function for the above two methods
-// It has a function created to initialize a "Conv" struct, which is a single convolution layer
-// It was developed by student: Dunhan Jiang
+// It has a function created to initialize a "Convolution" struct, which is a single convolution layer
+// This script was developed by Dunhan Jiang
 
 
 
@@ -119,6 +119,10 @@ func (convL *Convolution) Forward(x [][][][]float32, imageIndex int) [][][][]flo
 	ck := len(convL.Kernel[0][0]) // number of channels
 	nk := len(convL.Kernel[0][0][0]) // number of kernels
 
+	if cx != ck {
+		panic("Error: the given image and kernel have different number of channels")
+	}
+
 	// obtain the shape of the feature map after convolution, specifically the width and height
 	feature_h := int(math.Floor(float64(hx - hk) / float64(convL.Stride))) + 1 // height of feature
 	feature_w := int(math.Floor(float64(wx - wk) / float64(convL.Stride))) + 1 // width of feature
@@ -132,7 +136,7 @@ func (convL *Convolution) Forward(x [][][][]float32, imageIndex int) [][][][]flo
 
 		// for every image, it to a 3-dimensional matrix
 		// such matrix has a 2-dimensonal matrix construction but every pixel represents all data within an image patch
-		image := ImageToColumn(convL.Data[b], feature_w, feature_h, cx, ck, wk, hk, convL.Stride)
+		image := ImageToColumn(convL.Data[b], feature_w, feature_h, ck, wk, hk, convL.Stride)
 		// Note: cx and ck should be equal, this function will panic if not
 		// also store this image inside the Conv struct
 		convL.ImageCol[imageIndex + b] = image
@@ -221,13 +225,15 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 // a number of input image channels of type int, a number of kernel channels of type int, 
 // a number of kernel width of type int, a number of kernel heigt of type int, and a stride parameter of type int.
 // This function reshape one input image data to a matrix for output, having feature_h rows and feature_w columns,
-// each "pixel" of this matrix correspond to an image patch of the given image, whoes shape is given by (wk * hk * cx).
-func ImageToColumn(image [][][]float32, feature_h, feature_w, cx, ck, hk, wk, stride int) [][][]float32 {
+// each "pixel" of this matrix correspond to an image patch of the given image, whoes shape is given by (wk * hk * ck).
+func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride int) [][][]float32 {
 
 	// check whether image and kernel have the same number of channels, panic otherwise:
+	/*
 	if cx != ck {
 		panic("Error: the given image and kernel have different number of channels")
 	}
+	*/
 
 	// first initialize a [][][]float32 variable for output
 	imagePatches := make([][][]float32, feature_h)
@@ -257,9 +263,183 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, cx, ck, hk, wk, st
 
 
 
-func (tensor *Convolution) backward() [][][][]float32 {
+// This backward method is defined for a Conv struct, namely a convolutional layer, to compute the back propagation
+// Regardless of the fact that it is a method, we have two input variable: 
+// the first input is a delta of type Tensor computed from the last returning layer;
+// the second input is a float32 parameter representing the learning rate
+// This method returns another updated delta by this current convolution layer
+// This ouput has type [][][][]float32
+func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][]float32 {
 
-	return tensor.KGradient
+	////////////////////////////// Module 0: Essential Shapes
+	// obtain the shape of the data
+	bx := len(convL.Data) // number of image
+	cx := len(convL.Data[0]) // number of channels
+	hx := len(convL.Data[0][0]) // height
+	wx := len(convL.Data[0][0][0]) // width
+
+	// obtain the shape of the kernel
+	hk := len(convL.Kernel) // height
+	wk := len(convL.Kernel[0]) // width
+	ck := len(convL.Kernel[0][0]) // number of channels
+	nk := len(convL.Kernel[0][0][0]) // number of kernels
+
+	// obtain the shape of the delta
+	bd := len(delta) // number of image
+	cd := len(delta[0]) // number of outChannels
+	hd := len(delta[0][0]) // height
+	wd := len(delta[0][0][0]) // width
+
+	
+	////////////////////////////// Module 1: Compute kernel & bias gradients
+	// first initialize both the KGradient and BGradient fields to be all zeros to record necessary changes:
+	for i := 0; i < hk; i++ {
+		// the second outmost loop2: iterate through all columns of the kernel ///
+		for ii := 0; ii < wk; ii++ {
+			// the third outmost loop3: iterate through all channels of this pixel //
+			for iii := 0; iii < ck; iii++ {
+				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
+				for iiii := 0; iiii < nk; iiii++ {
+					// initialize "KGradient" to be all zeros
+					convL.KGradient[i][ii][iii][iiii] = 0
+					// initialize "BGradient" to be all zeros
+					convL.BGradient[iiii] = 0
+				}
+			}
+		}
+	}
+
+	// Then compute the weight of Kernel Gradient
+	// This nested loop compute the gradient of kernel weights
+	bxFloat32 := float32(bx)
+	// the outmost loop1: iterate through every signle image inside the entire batch ///////
+	for b := 0; b < bd; b++ {
+		// the second outmost loop2: iterate through every signle row of delta //////
+		for i := 0; i < hd; i++ {
+			// the third outmost loop3: iterate through every signle image patch at a specific ith row of delta /////
+			for ii := 0; ii < wd; ii++ {
+				// the fourth outmost loop4: iterate through every signle outChannel (equivalently, nk = cd) ////
+				for iii := 0; iii < cd; iii++ {
+					// the fifth outmost loop5: iterate through the height of the given image patch (or kernel) ///
+					for h := 0; h < hk; h++ {
+						// the sixth outmost loop6: iterate through the width of the given image patch (or kernel) //
+						for w := 0; w < wk; w++ {
+							// the most inner loop7: iterate through all inChannels (number of image channels) /
+							for c := 0; c < ck; c++ {
+								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][h*hk + w*wk + c] * delta[b][iii][i][ii] / bxFloat32
+							}
+						}
+					}
+				}
+			}
+		}
+	}
+
+	// Also compute the Bias Gradient
+	// This nested loop compute the gradient of kernel biases, with updates for bias field
+	// the outmost loop1: iterate through every outChannel (equivalently, nk = cd) ////
+	for i := 0; i < cd; i++ {
+		sumConc := float32(0.0)
+		// the second outmost loop2: iterate through every image in the entire batch ///
+		for ii := 0; ii < bd; ii++ {
+			// the third outmost loop3: iterate through every single row of delta //
+			for iii := 0; iii < hd; iii++ {
+				// the fourth outmost loop4: iterate through every single column of delta /
+				// now a pixel is located for add up
+				for iiii := 0; iiii < wd; iiii++ {
+					sumConc += delta[ii][i][iii][iiii]
+				}
+			}
+		}
+		convL.BGradient[i] = sumConc / bxFloat32
+	}
+
+
+	////////////////////////////// Module 2: Compute deltaBackward for output for the "next" shadower layer
+	// Initialize a tensor for output as the "delta" after current convolution layer's back propagation
+	deltaBackward := make([][][][]float32, bx)
+	for i := 0; i < bx; i++ {
+		deltaBackward[i] = make([][][]float32, cx)
+		for ii := 0; ii < cx; ii++ {
+			deltaBackward[i][ii] = make([][]float32, hx)
+			for iii := 0; iii < hx; iii++ {
+				deltaBackward[i][ii][iii] = make([]float32, wx)
+			}
+		}
+	}
+
+	// perform any padding if necessary
+	var deltaPad [][][][]float32
+	if hd-hk+1 != hx {
+		pad := (hx - hd + hk - 1) / 2 // integer division
+		deltaPad = PadLayer(delta, pad) // a subrotine is neseccary to pad the convL.Data into a favored size
+	} else {
+		deltaPad = delta
+	}
+	// Notice that after potential padding, the "deltaPad" slice should have the same shape as "convL.Data"
+
+	// Finally, calculate the value for "deltaBackward" for output
+	// the outmost loop1: iterate through every signle image inside the entire batch ///////
+	for b := 0; b < bx; b++ {
+		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, convL.Stride)
+		// image has shape: hx by wx by (wk * hk * nk)
+		// ATTENTION HERE: cd (# of outChannels to be concatenated) dimension
+		// is different from ck, when this function was last called
+		// image * k_180_col (whose shape is (wk * hk * nk) by ck) gives a slice whose shape is given by
+		// wx * hx * ck, corresponding to the shape in "deltaBackward"
+		
+		// the second outmost loop2: iterate through every signle row of "image" //////
+		for i := 0; i < hx; i++ {
+			// the third outmost loop3: iterate through every signle column of "image" /////
+			for ii := 0; ii < wx; ii++ {
+				// now that an image patch in "image" has been located
+				// the fourth outmost loop4: iterate through every signle channel of the image (inChannel) ////
+				for c := 0; c < cx; c++ {
+					kernelSum := float32(0.0)
+					// the fifth outmost loop5: iterate through every signle row of kernel ///
+					for h := 0; h < hk; h++ {
+						// the sixth outmost loop6: iterate through every signle column of kernel //
+						for w := 0; w < wk; w++ {
+							// the seventh outmost loop7: iterate through every signle kernel (nk) /
+							for n := 0; n < nk; n++ {
+								kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk + w*wk + n] // this n is the key
+								// now in the third dimension of image, it has shape (wk * hk * nk)
+								// here nk (or equivalently cd) has replaced the previous ck
+							}
+						}
+					}
+					deltaBackward[b][c][i][ii] = kernelSum
+				}
+			}
+		}
+	}
+
+
+	////////////////////////////// Module 3: Back Propagation
+	// Back Propagation: Where kernel and bias would be updated
+	// The following nested loop update the kernel according to both the kernel gradient and the learning rate
+	// the outmost loop1: iterate through all rows of the kernel ////
+	for i := 0; i < hk; i++ {
+		// the second outmost loop2: iterate through all columns of the kernel ///
+		for ii := 0; ii < wk; ii++ {
+			// the third outmost loop3: iterate through all channels of this pixel //
+			for iii := 0; iii < ck; iii++ {
+				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
+				for iiii := 0; iiii < nk; iiii++ {
+					convL.Kernel[i][ii][iii][iiii] -= convL.KGradient[i][ii][iii][iiii] * lRate
+				}
+			}
+		}
+	}
+
+	// This one last loop update the biases
+	for i := 0; i < nk; i++ {
+		// update the bias according to both the bias gradient and the learning rate
+		convL.Bias[i] -= convL.BGradient[i] * lRate
+	}
+
+	////////////////////////////// Module 4: Return AT LAST
+	return deltaBackward
 }
 
 
