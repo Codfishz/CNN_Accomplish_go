@@ -47,13 +47,44 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) {
 	//pool_2
 	var pool_2 Pooling
 
+	//linear layer
+	linear := NewLinear(256, 10)
+
+	//softmax
+	var softmax Softmax
+
+
 	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < len(trainImages.Data); i += batch_size {
+			//get batch data
+			batchData := trainImages.Data[i : i+batch_size]
+			batchLabel := trainLabels.Data[i : i+batch_size]
 
+			//forward pass
+			conv_1_output := conv_1.Forward(batchData)
+			pool_1_output := pool_1.Forward(conv_1_output)
+			relu_1.Forward(pool_1_output)
+			conv_2_output := conv_2.Forward(pool_1_output)
+			relu_2.Forward(conv_2_output)
+			pool_2_output := pool_2.Forward(conv_2_output)
+			linear_output := linear.Forward(pool_2_output)
+			loss, delta := softmax.CalLoss(linear_output, batchLabel)
+
+			//calculate loss
+			delta=linear.Backward(delta, learning_rate)
+			delta=pool_2.Backward(delta)
+			relu_2.Backward(delta)
+			delta=conv_2.Backward(delta, learning_rate)
+			relu_1.Backward(delta)
+			delta=pool_1.Backward(delta)
+			conv_1.Backward(delta, learning_rate)
+
+			learning_rate*=math.Pow(0.95, epoch+1)
+
+			loss := CrossEntropyLoss(softmax_output, batchLabel)
 			fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
 		}
 
-		learning_rate *= 0.95 * *(epoch + 1)
 	}
 
 }
