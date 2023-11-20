@@ -16,7 +16,7 @@ import (
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
-func Train(path string, learning_rate float64, num_epoch int, batch_size int) ([][][][]float32, [][][][]float32, []float32, []float32, [][]float32, [][]float32) {
+func Train(path string, learning_rate float32, num_epoch int, batch_size int) *Model {
 	//load training image
 	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte")
 	if err != nil {
@@ -67,34 +67,37 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) ([
 			conv_2_output := conv_2.Forward(pool_1_output)
 			relu_2.Forward(conv_2_output)
 			pool_2_output := pool_2.Forward(conv_2_output)
-			pool_2_output := Reshape4Dto2D(pool_2_output)
-			linear_output := linear.Forward(pool_2_output)
+			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
+			linear_output := linear.Forward(pool_2_output_reshaped)
 			loss, delta := softmax.CalLoss(linear_output, batchLabel)
 
 			//calculate loss
 			delta = linear.Backward(delta, learning_rate)
-			delta = Reshape2Dto4D(delta, batch_size, 4, 4, 16)
-			delta = pool_2.Backward(delta)
-			relu_2.Backward(delta)
-			delta = conv_2.Backward(delta, learning_rate)
-			relu_1.Backward(delta)
-			delta = pool_1.Backward(delta)
-			conv_1.Backward(delta, learning_rate)
+			delta_1 := Reshape2Dto4D(delta, batch_size, 4, 4, 16)
+			delta_2 := pool_2.Backward(delta_1)
+			relu_2.Backward(delta_2)
+			delta_3 := conv_2.Backward(delta_2, learning_rate)
+			relu_1.Backward(delta_3)
+			delta_4 := pool_1.Backward(delta_3)
+			conv_1.Backward(delta_4, learning_rate)
 
-			learning_rate *= math.Pow(0.95, epoch+1)
+			learning_rate *= float32(math.Pow(0.95, float64(epoch+1)))
 
-			loss := CrossEntropyLoss(softmax_output, batchLabel)
 			fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
 		}
 
 	}
-	k1 := conv_1.Kernel
-	b1 := conv_1.Bias
-	k2 := conv_2.Kernel
-	b2 := conv_2.Bias
-	w3 := linear.Weight
-	b3 := linear.Bias
-	return k1, k2, b1, b2, w3, b3
+
+	//return model parameters
+	m := Model {
+		kernel_1: conv_1.Kernel,
+		kernel_2: conv_2.Kernel,
+		bias_1: conv_1.Bias,
+		bias_2: conv_2.Bias,
+		weight: linear.W,
+		bias: linear.b,
+	}
+	return &m
 }
 
 // load training image data from ubyte file
