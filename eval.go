@@ -58,7 +58,9 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 		softmax_output := softmax.predict(linear_output)
 
 		index = OneHot(softmax_output.softmax)
-
+		if batchLabel[i][index] == 1 {
+			correct++
+		}
 	}
 	Accuracy := float32(correct / numImages)
 
