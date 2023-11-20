@@ -15,7 +15,7 @@ import (
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
-func Train(path string, learning_rate float64, num_epoch int, batch_size int) {
+func Train(path string, learning_rate float64, num_epoch int, batch_size int) k1, k2 [][][][]float32, b1, b2 []float32, w3, b3, [][]flaot32 {
 	//load training image
 	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte")
 	if err != nil {
@@ -86,7 +86,13 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) {
 		}
 
 	}
-
+	k1 := conv_1.Kernel
+	b1 := conv_1.Bias
+	k2 := conv_2.Kernel
+	b2 := conv_2.Bias
+	w3 := linear.Weight
+	b3 := linear.Bias
+	return k1, b1, k2, b2, w3, b3
 }
 
 // load training image data from ubyte file
