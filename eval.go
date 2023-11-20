@@ -40,7 +40,7 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 	//evaluation
 	correct := 0
 	numImages := len(testImages.Data)
-	allMatch := true
+	var index int
 	for i := 0; i < numImages; i += batch_size {
 		//get batch data
 		batchData := testImages.Data[i : i+batch_size]
@@ -57,18 +57,24 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 
 		softmax_output := softmax.predict(linear_output)
 
-		for j := 0; j < 10; j++ {
-			if batchLabel[i][j] != softmax_output[1][j] {
-				allMatch = false
-				break
-			}
-		}
-		if allMatch {
+		index = OneHot(softmax_output.softmax)
+		if batchLabel[i][index] == 1 {
 			correct++
 		}
-
 	}
 	Accuracy := float32(correct / numImages)
 
 	return Accuracy
+}
+
+func OneHot(predictedLabel [][]float32) int {
+	var max float32
+	var index int
+	for i := 0; i < len(predictedLabel[0]); i++ {
+		if predictedLabel[0][i] > max {
+			index = i
+			max = predictedLabel[0][i]
+		}
+	}
+	return index
 }
