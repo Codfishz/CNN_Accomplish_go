@@ -9,10 +9,10 @@ import (
 // Linear represents a fully connected neural network layer.
 type Linear struct {
 	W           [][]float32 // Weight matrix, inChannel x outChannel
-	b           [][]float32	// Bias vector, inChannel x OutChannel
+	b           []float32	// Bias vector, outChannel
 	WGradient   [][]float32 // Weight gradient matrix
-	bGradient   [][]float32	// Bias gradient vector
-	x           [][][][]float32 // Input data
+	bGradient   []float32	// Bias gradient vector
+	x           [][]float32 // Input data
 	inChannel   int			// Number of input features
 	outChannel  int			// Number of output features
 }
@@ -32,13 +32,11 @@ func NewLinear(inChannel, outChannel int) *Linear {
 		}
 	}
 
-	b := make([][]float32, outChannel)
-	bGradient := make([][]float32, outChannel)
+	b := make([]float32, outChannel)
+	bGradient := make([]float32, outChannel)
 	for i := range b {
-		for j := range b[i] {
-			b[i][j] = float32(rand.NormFloat64() / scale)
-			bGradient[i][j] = 0
-		}
+		b[i] = float32(rand.NormFloat64() / scale)
+		bGradient[i] = 0
 	}
 
 	// Return the new layer
@@ -53,15 +51,14 @@ func NewLinear(inChannel, outChannel int) *Linear {
 }
 
 // Forward computes the forward pass of the linear layer.
-func (l *Linear) Forward(x [][][][]float32) [][]float32 {
+func (l *Linear) Forward(x [][]float32) [][]float32 {
 	l.x = x
 	xForward := make([][]float32, len(x)) // next layer input
 
 	// xForward = x * W + b
 	for i := range xForward {
 		xForward[i] = make([]float32, l.outChannel)
-		for ii := range xForward[i] {
-			xForward[i][ii] make
+		for j := range xForward[i] {
 			sum := l.b[j]
 			for k := range x[i] {
 				sum += x[i][k] * l.W[k][j]
