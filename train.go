@@ -11,6 +11,7 @@ import (
 	"bufio"
 	"encoding/binary"
 	"fmt"
+	"math"
 	"os"
 )
 
@@ -53,7 +54,6 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) k1
 	//softmax
 	var softmax Softmax
 
-
 	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < len(trainImages.Data); i += batch_size {
 			//get batch data
@@ -71,15 +71,15 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) k1
 			loss, delta := softmax.CalLoss(linear_output, batchLabel)
 
 			//calculate loss
-			delta=linear.Backward(delta, learning_rate)
-			delta=pool_2.Backward(delta)
+			delta = linear.Backward(delta, learning_rate)
+			delta = pool_2.Backward(delta)
 			relu_2.Backward(delta)
-			delta=conv_2.Backward(delta, learning_rate)
+			delta = conv_2.Backward(delta, learning_rate)
 			relu_1.Backward(delta)
-			delta=pool_1.Backward(delta)
+			delta = pool_1.Backward(delta)
 			conv_1.Backward(delta, learning_rate)
 
-			learning_rate*=math.Pow(0.95, epoch+1)
+			learning_rate *= math.Pow(0.95, epoch+1)
 
 			loss := CrossEntropyLoss(softmax_output, batchLabel)
 			fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
@@ -152,7 +152,7 @@ func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 // load training label data from ubyte file
 // Would return tensor pointer, with tensor size [number of labels][channel of label(number of types))]
 // for MNIST, would be [60000][10][1][1]
-func LoadLabelsFromFile(labelFile string) (*Tensor, error) {
+func LoadLabelsFromFile(labelFile string) ([][]float32, error) {
 	file, err := os.Open(labelFile)
 	if err != nil {
 		return nil, err
@@ -167,22 +167,20 @@ func LoadLabelsFromFile(labelFile string) (*Tensor, error) {
 	var numLabels uint32
 	binary.Read(reader, binary.BigEndian, &numLabels)
 
-	tensorData := make([][][][]float32, numLabels)
+	labelData := make([][]float32, numLabels)
 
 	for i := uint32(0); i < numLabels; i++ {
 		labelByte, _ := reader.ReadByte()
 		label := int(labelByte)
-		labelTensor := make([][][]float32, 10) // For MNIST, there is 10 types
 		for j := 0; j < 10; j++ {
 
 			if j == label {
-				labelTensor[j] = [][]float32{{1}}
+				labelData[i][j] = 1
 			} else {
-				labelTensor[j] = [][]float32{{0}}
+				labelData[i][j] = 0
 			}
 		}
-		tensorData[i] = labelTensor
 	}
 
-	return &Tensor{Data: tensorData}, nil
+	return labelData, nil
 }
