@@ -7,7 +7,7 @@ import (
 	"os"
 )
 
-func eval(k1, k2 [][][][]float32, b1, b2 []float32, w3, b3, [][]flaot32) float32{
+func eval(k1, k2 [][][][]float32, b1, b2 []float32, w3, b3 [][]flaot32) float32{
 	//load test image
 	testImages, err := LoadImagesFromFile(path + "/t10k-images-idx3-ubyte")
 	if err != nil {
@@ -46,7 +46,8 @@ func eval(k1, k2 [][][][]float32, b1, b2 []float32, w3, b3, [][]flaot32) float32
 
 	//evaluation
 	correct := 0
-	for i := 0; i < len(testImages.Data); i += batch_size {
+	numImages:= len(testImages.Data)
+	for i := 0; i < numImages; i += batch_size {
 		//get batch data
 		batchData := testImages.Data[i : i+batch_size]
 		batchLabel := testLabels.Data[i : i+batch_size]
@@ -61,7 +62,9 @@ func eval(k1, k2 [][][][]float32, b1, b2 []float32, w3, b3, [][]flaot32) float32
 		linear_output := linear.Forward(pool_2_output)
 
 		softmax_output := softmax.predict(linear_output)
-		
 
 
+	Accuracy:=float32(correct/numImages)
+
+	return Accuracy
 }
