@@ -1,6 +1,6 @@
 package main
 
-func eval(path string, batch_size int, m Model) float32 {
+func Eval(path string, batch_size int, m Model) float32 {
 	//load test image
 	k1 := m.kernel_1
 	k2 := m.kernel_2
