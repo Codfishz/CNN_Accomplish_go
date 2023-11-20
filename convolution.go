@@ -34,7 +34,7 @@ type Convolution struct {
 
 // This InitializeConvolutionLayer function build a Convolution struct as one layer
 // This function takes as input one slice of ints as the intended kernel's shape, 
-// plus three int parameters for Pad and Stride fields, as well as a number of all Images
+// plus three int parameters for Pad and Stride fields, as well as a number of all Images (the batch size)
 // It returns a pointer to the new convolution layer initialized
 func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages int) *Convolution {
 
@@ -106,7 +106,7 @@ func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages i
 // the second input is a counter of the index of the first image in this single batch, for purposes of storing image patch feature
 // This method returns a feature layer which we obtained after the convolution
 // This ouput has type [][][][]float32, whose shape is given by: (bx, imageNum) * (featureHeight) * (featureWidth) * (nk, kernelNum)
-func (convL *Convolution) Forward(x [][][][]float32, imageIndex int) [][][][]float32 {
+func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 
 	// copy over the input data to the convolution layer struct
 	// make padding when necessary
@@ -148,7 +148,7 @@ func (convL *Convolution) Forward(x [][][][]float32, imageIndex int) [][][][]flo
 		image := ImageToColumn(convL.Data[b], feature_w, feature_h, ck, wk, hk, convL.Stride)
 		// Note: cx and ck should be equal, this function will panic if not
 		// also store this image inside the Conv struct
-		convL.ImageCol[imageIndex + b] = image
+		convL.ImageCol[b] = image
 
 		// Then do the actual convolution for every image patch
 		// image has shape: (feature_h) by (feature_w) by (wk * hk * cx)

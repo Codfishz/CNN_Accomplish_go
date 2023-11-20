@@ -8,7 +8,7 @@ type Softmax struct {
 	softmax [][]float32
 }
 
-func (s *Softmax) predict(predict [][]float32) {
+func (s *Softmax) predict(predict [][]float32) *Softmax {
 	batchsize, classes := len(predict), len(predict[0])
 	s.softmax = make([][]float32, batchsize)
 
@@ -38,12 +38,15 @@ func (s *Softmax) predict(predict [][]float32) {
 
 		s.softmax[i] = predictTmp
 	}
+	return &s
 }
 
-func (s *Softmax) calLoss(predict [][]float32, label [][]float32) (float32, [][]float32) {
+func (s *Softmax) CalLoss(predict [][]float32, label [][]float32) (float32, [][]float32) {
 	batchsize, classes := len(predict), len(predict[0])
 	// Calculate the softmax values
-	s.predict(predict)
+
+	var softmax Softmax
+	softmax = s.predict(predict)
 
 	loss := float32(0.0)
 	//Initialize delta matrix
@@ -52,11 +55,11 @@ func (s *Softmax) calLoss(predict [][]float32, label [][]float32) (float32, [][]
 	for i := 0; i < batchsize; i++ {
 		delta[i] = make([]float32, classes)
 		for j := 0; j < classes; j++ {
-			delta[i][j] = s.softmax[i][j] - label[i][j]
-			loss -= float32(math.Log(float64(s.softmax[i][j]))) * label[i][j]
+			delta[i][j] = softmax.softmax[i][j] - label[i][j]
+			loss -= float32(math.Log(float64(softmax.softmax[i][j]))) * label[i][j]
 		}
 	}
 
-	loss /= float32(batchsize*classes)
+	loss /= float32(batchsize * classes)
 	return loss, delta
 }

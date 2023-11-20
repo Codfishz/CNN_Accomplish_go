@@ -9,10 +9,10 @@ import (
 // Linear represents a fully connected neural network layer.
 type Linear struct {
 	W           [][]float32 // Weight matrix, inChannel x outChannel
-	b           []float32	// Bias vector, outChannel, added to each row of the output
+	b           []float32	// Bias vector, outChannel
 	WGradient   [][]float32 // Weight gradient matrix
 	bGradient   []float32	// Bias gradient vector
-	x           [][]float32 // Input data, flattened
+	x           [][]float32 // Input data
 	inChannel   int			// Number of input features
 	outChannel  int			// Number of output features
 }
@@ -36,6 +36,7 @@ func NewLinear(inChannel, outChannel int) *Linear {
 	bGradient := make([]float32, outChannel)
 	for i := range b {
 		b[i] = float32(rand.NormFloat64() / scale)
+		bGradient[i] = 0
 	}
 
 	// Return the new layer
