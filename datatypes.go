@@ -5,6 +5,15 @@ type Tensor struct {
 	Data [][][][]float32
 }
 
+type Model struct {
+    kernel_1 [][][][]float32
+    kernel_2 [][][][]float32
+    bias_1 []float32
+    bias_2 []float32
+    weight [][]float32
+    bias []float32
+}
+
 // Initialize a tensor with all zeros
 func NewTensor(b, c, h, w int) *Tensor {
 	data := make([][][][]float32, b)
