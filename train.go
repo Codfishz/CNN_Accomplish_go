@@ -67,7 +67,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) ([
 			conv_2_output := conv_2.Forward(pool_1_output)
 			relu_2.Forward(conv_2_output)
 			pool_2_output := pool_2.Forward(conv_2_output)
-			pool_2_output := Reshape4Dto2D(pool_2_output)
+			pool_2_output = Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output)
 			loss, delta := softmax.CalLoss(linear_output, batchLabel)
 
