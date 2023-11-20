@@ -36,9 +36,16 @@ type Convolution struct {
 // This function takes as input one slice of ints as the intended kernel's shape, 
 // plus three int parameters for Pad and Stride fields, as well as a number of all Images (the batch size)
 // It returns a pointer to the new convolution layer initialized
-func InitializeConvolutionLayer(kernelShape []int, pad, stride, numImages int) *Convolution {
+func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages int) *Convolution {
 
 	var convLayer Convolution // one convolution layer
+
+	// obtain kernelShape
+	kernelShape := make([]int, 4)
+	kernelShape[0] = len(kernel)
+	kernelShape[1] = len(kernel[0])
+	kernelShape[2] = len(kernel[0][0])
+	kernelShape[3] = len(kernel[0][0][0])
 
 	// copy over parameter values
 	convLayer.Pad = pad
@@ -47,7 +54,8 @@ func InitializeConvolutionLayer(kernelShape []int, pad, stride, numImages int) *
 	scale := float32(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
 
 	// initialize "Kernel"
-	convLayer.Kernel = make([][][][]float32, kernelShape[0])
+	convLayer.Kernel = kernel
+	/*
 	for i := 0; i < kernelShape[0]; i++ {
 		convLayer.Kernel[i] = make([][][]float32, kernelShape[1])
 		for ii := 0; ii < kernelShape[1]; ii++ {
@@ -60,7 +68,8 @@ func InitializeConvolutionLayer(kernelShape []int, pad, stride, numImages int) *
 			}
 		}
 	}
-
+	*/
+	
 	// initialize "Bias"
 	convLayer.Bias = make([]float32, kernelShape[3])
 	for i := 0; i < len(convLayer.Bias); i++ {
