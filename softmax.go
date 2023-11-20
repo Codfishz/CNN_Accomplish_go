@@ -8,7 +8,7 @@ type Softmax struct {
 	softmax [][]float32
 }
 
-func (s *Softmax) predict(predict [][]float32) {
+func (s *Softmax) predict(predict [][]float32) *Softmax {
 	batchsize, classes := len(predict), len(predict[0])
 	s.softmax = make([][]float32, batchsize)
 
@@ -56,10 +56,10 @@ func (s *Softmax) CalLoss(predict [][]float32, label [][]float32) (float32, [][]
 		delta[i] = make([]float32, classes)
 		for j := 0; j < classes; j++ {
 			delta[i][j] = softmax.softmax[i][j] - label[i][j]
-			loss -= float32(math.Log(float64(softmaxs.softmax[i][j]))) * label[i][j]
+			loss -= float32(math.Log(float64(softmax.softmax[i][j]))) * label[i][j]
 		}
 	}
 
-	loss /= float32(batchsize*classes)
+	loss /= float32(batchsize * classes)
 	return loss, delta
 }
