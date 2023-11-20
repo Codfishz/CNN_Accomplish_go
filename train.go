@@ -29,7 +29,17 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 	}
 
 	//construct model
-	kernel_1 := []int{5, 5, 1, 6}
+	data := []int{5, 5, 1, 6}
+	kernel_1 := make([][][][]float32, data[0])
+	for i := 0; i < data[0]; i++ {
+		kernel_1[i] = make([][][]float32, data[1])
+		for j := 0; j < data[1]; j++ {
+			kernel_1[i][j] = make([][]float32, data[2])
+			for k := 0; k < data[2]; k++ {
+				kernel_1[i][j][k] = make([]float32, data[3])
+			}
+		}
+	}
 	conv_1 := InitializeConvolutionLayer(kernel_1, 0, 1, batch_size)
 
 	//pool_1
@@ -39,7 +49,17 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 	var relu_1 Relu
 
 	//conv2
-	kernel_2 := []int{5, 5, 6, 16}
+	data = []int{5, 5, 6, 16}
+	kernel_2 := make([][][][]float32, data[0])
+	for i := 0; i < data[0]; i++ {
+		kernel_2[i] = make([][][]float32, data[1])
+		for j := 0; j < data[1]; j++ {
+			kernel_2[i][j] = make([][]float32, data[2])
+			for k := 0; k < data[2]; k++ {
+				kernel_2[i][j][k] = make([]float32, data[3])
+			}
+		}
+	}
 	conv_2 := InitializeConvolutionLayer(kernel_2, 0, 1, batch_size)
 
 	//relu_2
