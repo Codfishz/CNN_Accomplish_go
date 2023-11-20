@@ -1,6 +1,13 @@
 package main
 
-func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32, w3, b3 [][]float32) float32 {
+func eval(path string, batch_size int, m Model) float32 {
+	//load test image
+	k1 := m.kernel_1
+	k2 := m.kernel_2
+	b1 := m.bias_1
+	b2 := m.bias_2
+	w3 := m.weight
+	b3 := m.bias
 	//load test image
 	testImages, err := LoadImagesFromFile(path + "/t10k-images-idx3-ubyte")
 	if err != nil {
@@ -15,7 +22,7 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 	//construct model
 	//conv1
 	conv_1 := InitializeConvolutionLayer(k1, 0, 1, batch_size)
-
+	conv_1.Bias = b1
 	//pool_1
 	var pool_1 Pooling
 
@@ -24,7 +31,7 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 
 	//conv2
 	conv_2 := InitializeConvolutionLayer(k2, 0, 1, batch_size)
-
+	conv_2.Bias = b2
 	//relu_2
 	var relu_2 Relu
 
@@ -33,7 +40,8 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 
 	//linear layer
 	linear := NewLinear(256, 10)
-
+	linear.W = w3
+	linear.b = b3
 	//softmax
 	var softmax Softmax
 
@@ -53,7 +61,8 @@ func eval(path string, batch_size int, k1, k2 [][][][]float32, b1, b2 []float32,
 		conv_2_output := conv_2.Forward(pool_1_output)
 		relu_2.Forward(conv_2_output)
 		pool_2_output := pool_2.Forward(conv_2_output)
-		linear_output := linear.Forward(pool_2_output)
+		pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
+		linear_output := linear.Forward(pool_2_output_reshaped)
 
 		softmax_output := softmax.predict(linear_output)
 
