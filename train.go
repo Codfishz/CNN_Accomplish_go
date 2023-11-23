@@ -18,12 +18,12 @@ import (
 // This Train function would load model and use traing set to improve the parameter of model layers.
 func Train(path string, learning_rate float32, num_epoch int, batch_size int) *Model {
 
-	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte")
+	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte/train-images-idx3-ubyte")
 	if err != nil {
 		panic("Load training image fail!")
 	}
 
-	trainLabels, err := LoadLabelsFromFile(path + "/train-labels-idx1-ubyte")
+	trainLabels, err := LoadLabelsFromFile(path + "/train-labels-idx1-ubyte/train-labels-idx1-ubyte")
 	if err != nil {
 		panic("Load training label fail!")
 	}
@@ -82,6 +82,7 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 			//forward pass
 			conv_1_output := conv_1.Forward(batchData)
+			fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
 			relu_1.Forward(conv_1_output)
 			pool_1_output := pool_1.Forward(conv_1_output)
 			conv_2_output := conv_2.Forward(pool_1_output)
@@ -124,7 +125,7 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 // For MNIST, would be [60000][1][28][28]
 func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 
-	//\heck whether the path for image file is correct
+	//check whether the path for image file is correct
 	//
 	file, err := os.Open(imageFile)
 	if err != nil {
@@ -192,6 +193,9 @@ func LoadLabelsFromFile(labelFile string) ([][]float32, error) {
 	binary.Read(reader, binary.BigEndian, &numLabels)
 
 	labelData := make([][]float32, numLabels)
+	for i := range labelData {
+		labelData[i] = make([]float32, 10)
+	}
 
 	for i := uint32(0); i < numLabels; i++ {
 		labelByte, _ := reader.ReadByte()

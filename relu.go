@@ -1,11 +1,15 @@
 package main
 
+import(
+	// "fmt"
+)
+
 type Relu struct {
 	FeatureMask *Tensor
 }
 
 func (relu *Relu) Forward(x [][][][]float32) {
-	//if
+	relu.FeatureMask = NewTensor(len(x), len(x[0]), len(x[0][0]), len(x[0][0][0]))
 
 	for i := 0; i < len(x); i++ {
 		for ii := 0; ii < len(x[0]); ii++ {

@@ -10,7 +10,7 @@ func main() {
 	learning_rate := float32(0.01)
 	batch_size := 100
 	num_epoch := 10
-	path := "data"
+	path := "MINST"
 
 	m := Train(path, learning_rate, num_epoch, batch_size)
 

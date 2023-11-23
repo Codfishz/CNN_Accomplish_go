@@ -29,6 +29,26 @@ func NewTensor(b, c, h, w int) *Tensor {
 	return &Tensor{Data: data}
 }
 
+// CopyTensor
+func Copy4D(x [][][][]float32) [][][][]float32 {
+    new4D := make([][][][]float32, len(x))
+
+    for i := range x {
+        new4D[i] = make([][][]float32, len(x[i]))
+        for ii := range x[i] {
+            new4D[i][ii] = make([][]float32, len(x[i][ii]))
+            for iii := range x[i][ii] {
+                new4D[i][ii][iii] = make([]float32, len(x[i][ii][iii]))
+                for iiii := range x[i][ii][iii] {
+                    new4D[i][ii][iii][iiii] = x[i][ii][iii][iiii]
+                }
+            }
+        }
+    }
+
+    return new4D
+}
+
 // Reshape a 4D tensor to a 2D tensor
 func Reshape4Dto2D(matrix4D [][][][]float32) [][]float32 {
     batchSize := len(matrix4D)

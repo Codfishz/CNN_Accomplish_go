@@ -14,6 +14,7 @@ package main
 import (
 	"math"
 	"math/rand"
+	"fmt"
 )
 
 
@@ -110,7 +111,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 
 	// copy over the input data to the convolution layer struct
 	// make padding when necessary
-	convL.Data = x
+	convL.Data = Copy4D(x)
 	// forward
 	if convL.Pad != 0 {
 		convL.Data = PadLayer(convL.Data, convL.Pad) // a subrotine is neseccary to pad the convL.Data into a favored size
@@ -128,6 +129,9 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 	ck := len(convL.Kernel[0][0]) // number of channels
 	nk := len(convL.Kernel[0][0][0]) // number of kernels
 
+	fmt.Println(bx, cx, hx, wx, hk, wk, ck, nk)
+
+	fmt.Println(cx, ck)
 	if cx != ck {
 		panic("Error: the given image and kernel have different number of channels")
 	}
@@ -145,6 +149,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 
 		// for every image, it to a 3-dimensional matrix
 		// such matrix has a 2-dimensonal matrix construction but every pixel represents all data within an image patch
+		
 		image := ImageToColumn(convL.Data[b], feature_w, feature_h, ck, wk, hk, convL.Stride)
 		// Note: cx and ck should be equal, this function will panic if not
 		// also store this image inside the Conv struct
@@ -175,7 +180,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 							// the seventh outmost loop7: iterate through the channel of this kernel /
 							for c := 0; c < ck; c++ {
 								// sum add: (weight * value + bias)
-								patchConv += image[i][ii][h*hk + w*wk + c] * convL.Kernel[w][h][c][iii] + convL.Bias[iii]
+								patchConv += image[i][ii][h*hk + w + c] * convL.Kernel[w][h][c][iii] + convL.Bias[iii]
 							}
 						}
 					}
@@ -236,7 +241,6 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 // This function reshape one input image data to a matrix for output, having feature_h rows and feature_w columns,
 // each "pixel" of this matrix correspond to an image patch of the given image, whoes shape is given by (wk * hk * ck).
 func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride int) [][][]float32 {
-
 	// check whether image and kernel have the same number of channels, panic otherwise:
 	/*
 	if cx != ck {
@@ -260,7 +264,9 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride
 					for c := 0; c < ck; c++ {
 						// index of current image patch pixel's row: i*stride+h
 						// index of current image patch pixel's col: ii*stride+w
-						imagePatches[i][ii][h*hk + w*wk + c] = image[c][i*stride+h][ii*stride+w]
+						// fmt.Println(i, ii, h*hk + w + c, c, i*stride+h, ii*stride+w)
+						// fmt.Println(h, w, h*hk + w + c)
+						imagePatches[i][ii][h*hk + w + c] = image[c][i*stride+h][ii*stride+w]
 					}
 				}
 			}
@@ -335,7 +341,7 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 						for w := 0; w < wk; w++ {
 							// the most inner loop7: iterate through all inChannels (number of image channels) /
 							for c := 0; c < ck; c++ {
-								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][h*hk + w*wk + c] * delta[b][iii][i][ii] / bxFloat32
+								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][h*hk + w + c] * delta[b][iii][i][ii] / bxFloat32
 							}
 						}
 					}
@@ -411,7 +417,7 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 						for w := 0; w < wk; w++ {
 							// the seventh outmost loop7: iterate through every signle kernel (nk) /
 							for n := 0; n < nk; n++ {
-								kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk + w*wk + n] // this n is the key
+								kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk + w + n] // this n is the key
 								// now in the third dimension of image, it has shape (wk * hk * nk)
 								// here nk (or equivalently cd) has replaced the previous ck
 							}
