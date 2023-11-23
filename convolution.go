@@ -14,7 +14,7 @@ package main
 import (
 	"math"
 	"math/rand"
-	"fmt"
+	// "fmt"
 )
 
 
@@ -129,9 +129,9 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 	ck := len(convL.Kernel[0][0]) // number of channels
 	nk := len(convL.Kernel[0][0][0]) // number of kernels
 
-	fmt.Println(bx, cx, hx, wx, hk, wk, ck, nk)
+	// fmt.Println(bx, cx, hx, wx, hk, wk, ck, nk)
 
-	fmt.Println(cx, ck)
+	// fmt.Println(cx, ck)
 	if cx != ck {
 		panic("Error: the given image and kernel have different number of channels")
 	}
@@ -160,16 +160,16 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 		// kernel has shape: (wk) by (hk) by (ck) by (nk), equivalently, make kernel into shape: (wk * hk * cx) by (nk)
 		// (image .* kernel) has shape:  (feature_h * feature_w) by (nk)
 
-		feature[b] = make([][][]float32, feature_h)
-		// the second outmost loop2: iterate through every signle row of many image patches //////
-		for i := 0; i < feature_h; i++ {
+		feature[b] = make([][][]float32, nk)
+		// ? the second outmost loop2: iterate through every signle row of many image patches //////
+		for i := 0; i < nk; i++ {
 			feature[b][i] = make([][]float32, feature_w)
 			// the third outmost loop3: iterate through every signle image patch at a specific ith row /////
 			for ii := 0; ii < feature_w; ii++ {
-				feature[b][i][ii] = make([]float32, nk)
+				feature[b][i][ii] = make([]float32, feature_h)
 				// now an image patch at ith row, iith column has been located
 				// the fourth outmost loop4: iterate through every signle kernel for this specific image patch ////
-				for iii := 0; iii < nk; iii++ {
+				for iii := 0; iii < feature_h; iii++ {
 					// do convolution for an image patch at [i][ii] location in the feature space by the [iii] kernel
 					// initialize a summation variable
 					patchConv := float32(0.0)
@@ -180,7 +180,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 							// the seventh outmost loop7: iterate through the channel of this kernel /
 							for c := 0; c < ck; c++ {
 								// sum add: (weight * value + bias)
-								patchConv += image[i][ii][h*hk + w + c] * convL.Kernel[w][h][c][iii] + convL.Bias[iii]
+								patchConv += image[ii][iii][h*hk + w + c] * convL.Kernel[w][h][c][i] + convL.Bias[i]
 							}
 						}
 					}
@@ -189,6 +189,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 			}
 		}
 	}
+
 	return feature
 }
 

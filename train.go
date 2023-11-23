@@ -82,9 +82,11 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 			//forward pass
 			conv_1_output := conv_1.Forward(batchData)
-			fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
+			// fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
 			relu_1.Forward(conv_1_output)
+			fmt.Println("conv:", len(conv_1_output), len(conv_1_output[0]), len(conv_1_output[0][0]), len(conv_1_output[0][0][0]))
 			pool_1_output := pool_1.Forward(conv_1_output)
+			fmt.Println("pool:", len(pool_1_output), len(pool_1_output[0]), len(pool_1_output[0][0]), len(pool_1_output[0][0][0]))
 			conv_2_output := conv_2.Forward(pool_1_output)
 			relu_2.Forward(conv_2_output)
 			pool_2_output := pool_2.Forward(conv_2_output)
