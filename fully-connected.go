@@ -3,6 +3,7 @@ package main
 import (
 	"math"
 	"math/rand"
+	// "fmt"
 	// "time"
 )
 
@@ -75,25 +76,34 @@ func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
 	batchSize := len(delta)
 	deltaBackward := make([][]float32, batchSize) // previous layer delta
 
+	for i := range l.WGradient {
+		for j := range l.WGradient[0] {
+			l.WGradient[i][j] = float32(0)
+			l.bGradient[j] = float32(0)
+		}
+	}
+
 	// wGradient = x^T * delta / batchSize
 	// deltaBackward = delta * w^T
-	for i := range deltaBackward {
+	batchSizeF32 := float32(batchSize)
+	// fmt.Println(len(l.WGradient), len(l.WGradient[0]))
+	for i := range deltaBackward { // 100
 		deltaBackward[i] = make([]float32, l.inChannel)
-		for j := range deltaBackward[i] {
-			for k := range delta[i] {
-				l.WGradient[j][k] += l.x[i][j] * delta[i][k]
+		for j := range deltaBackward[i] { // 256
+			for k := range delta[i] { // 10
+				l.WGradient[j][k] += l.x[i][j] * delta[i][k] / batchSizeF32
 				deltaBackward[i][j] += delta[i][k] * l.W[j][k]
 			}
-			l.WGradient[j][i] /= float32(batchSize)
+			// l.WGradient[j][i] /= float32(batchSize)
 		}
 	}
 
 	// bGradient = delta / batchSize
 	for i := range l.b {
 		for j := range delta {
-			l.bGradient[i] += delta[j][i]
+			l.bGradient[i] += delta[j][i]  / batchSizeF32
 		}
-		l.bGradient[i] /= float32(batchSize)
+		// l.bGradient[i] /= float32(batchSize)
 	}
 
 	// Backpropagation
