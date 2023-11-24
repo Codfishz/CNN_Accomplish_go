@@ -14,7 +14,7 @@ package main
 import (
 	"math"
 	"math/rand"
-	// "fmt"
+	//"fmt"
 )
 
 
@@ -206,14 +206,15 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 	cx := len(data[0]) // number of channels
 	hx := len(data[0][0]) // height
 	wx := len(data[0][0][0]) // width
-
+	//fmt.Println(bx, cx, hx, wx)
+	// fmt.Println(bx, cx, hx, wx, pad)
 	dataNew := make([][][][]float32, bx) // for output
 	// the outmost loop1: iterate through every signle image inside the entire batch ////
 	for i := 0; i < bx; i++ {
 		dataNew[i] = make([][][]float32, cx)
 		// the second outmost loop2: iterate through every signle channel of a specific image ///
 		for ii := 0; ii < cx; ii++ {
-			dataNew[i][ii] = make([][]float32, hx)
+			dataNew[i][ii] = make([][]float32, (pad + hx + pad))
 			// the third outmost loop3: iterate through rows of a specific image channel //
 			for iii := 0; iii < (pad + hx + pad); iii++ {
 				// for the first and last "# of pad" rows, make slices of zeros
@@ -223,7 +224,9 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 					dataNew[i][ii][iii] = make([]float32, (pad + wx + pad))
 					// the fourth outmost loop4: iterate through columns of a specific row of an image's specific channel /
 					for iiii := 0; iiii < wx; iiii++ { // copy over
-						dataNew[i][ii][iii][iiii+pad] = data[i][ii][iii][iiii]
+						//fmt.Println(len(dataNew), len(dataNew[0]), len(dataNew[0][0]), len(dataNew[0][0][0]))
+						//fmt.Println(i, ii, iii, iiii)
+						dataNew[i][ii][iii][iiii+pad] = data[i][ii][iii-pad][iiii]
 					}
 				}
 			}
@@ -306,7 +309,10 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	hd := len(delta[0][0]) // height
 	wd := len(delta[0][0][0]) // width
 
-	
+	// fmt.Println("delta input:", bd, cd, hd, wd)
+	// fmt.Println("kernel size:", hk, wk, ck, nk)
+	// fmt.Println("Data size:", bx, cx, hx, wx)
+
 	////////////////////////////// Module 1: Compute kernel & bias gradients
 	// first initialize both the KGradient and BGradient fields to be all zeros to record necessary changes:
 	for i := 0; i < hk; i++ {
@@ -388,6 +394,8 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	var deltaPad [][][][]float32
 	if hd-hk+1 != hx {
 		pad := (hx - hd + hk - 1) / 2 // integer division
+		//fmt.Println(len(delta), len(delta[0]), len(delta[0][0]), len(delta[0][0][0]))
+		//fmt.Println("# pad:", pad)
 		deltaPad = PadLayer(delta, pad) // a subrotine is neseccary to pad the convL.Data into a favored size
 	} else {
 		deltaPad = delta
@@ -396,8 +404,10 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 
 	// Finally, calculate the value for "deltaBackward" for output
 	// the outmost loop1: iterate through every signle image inside the entire batch ///////
+	//fmt.Println("afterPad:", len(deltaPad), len(deltaPad[0]), len(deltaPad[0][0]), len(deltaPad[0][0][0]))
 	for b := 0; b < bx; b++ {
-		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, convL.Stride)
+		//fmt.Println(hx, wx, cd, wk, hk, convL.Stride)
+		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, convL.Stride) // hx=wx=12
 		// image has shape: hx by wx by (wk * hk * nk)
 		// ATTENTION HERE: cd (# of outChannels to be concatenated) dimension
 		// is different from ck, when this function was last called
