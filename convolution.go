@@ -208,7 +208,7 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 	wx := len(data[0][0][0]) // width
 
 	dataNew := make([][][][]float32, bx) // for output
-	// the outmost loop1: iterate through every signle image inside the entire batch ////
+	// the outmost loop1: iterate through every single image inside the entire batch ////
 	for i := 0; i < bx; i++ {
 		dataNew[i] = make([][][]float32, cx)
 		// the second outmost loop2: iterate through every signle channel of a specific image ///
