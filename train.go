@@ -76,6 +76,7 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < len(trainImages.Data); i += batch_size {
+			// for i := 0; i < 300; i += batch_size {
 			//get batch data
 			batchData := trainImages.Data[i : i+batch_size]
 			batchLabel := trainLabels[i : i+batch_size]
@@ -111,13 +112,13 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	}
 	//return model parameters
-	m := Model {
+	m := Model{
 		kernel_1: conv_1.Kernel,
 		kernel_2: conv_2.Kernel,
-		bias_1: conv_1.Bias,
-		bias_2: conv_2.Bias,
-		weight: linear.W,
-		bias: linear.b,
+		bias_1:   conv_1.Bias,
+		bias_2:   conv_2.Bias,
+		weight:   linear.W,
+		bias:     linear.b,
 	}
 	return &m
 }

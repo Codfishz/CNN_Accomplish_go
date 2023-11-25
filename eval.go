@@ -9,12 +9,12 @@ func Eval(path string, batch_size int, m Model) float32 {
 	w3 := m.weight
 	b3 := m.bias
 	//load test image
-	testImages, err := LoadImagesFromFile(path + "/t10k-images-idx3-ubyte")
+	testImages, err := LoadImagesFromFile(path + "/t10k-images-idx3-ubyte/t10k-images-idx3-ubyte")
 	if err != nil {
 		panic("Load test image fail!")
 	}
 
-	testLabels, err := LoadLabelsFromFile(path + "/t10k-labels-idx1-ubyte")
+	testLabels, err := LoadLabelsFromFile(path + "/t10k-labels-idx1-ubyte/t10k-labels-idx1-ubyte")
 	if err != nil {
 		panic("Load test label fail!")
 	}
@@ -48,8 +48,11 @@ func Eval(path string, batch_size int, m Model) float32 {
 	//evaluation
 	correct := 0
 	numImages := len(testImages.Data)
-	var index int
 	for i := 0; i < numImages; i += batch_size {
+		// for i := 0; i < 300; i += batch_size {
+		if i > numImages {
+			continue
+		}
 		//get batch data
 		batchData := testImages.Data[i : i+batch_size]
 		batchLabel := testLabels[i : i+batch_size]
@@ -65,10 +68,15 @@ func Eval(path string, batch_size int, m Model) float32 {
 		linear_output := linear.Forward(pool_2_output_reshaped)
 
 		softmax_output := softmax.predict(linear_output)
-
-		index = OneHot(softmax_output.softmax)
-		if batchLabel[i][index] == 1 {
-			correct++
+		index := OneHot(softmax_output.softmax)
+		// fmt.Println(batchData[0])
+		// fmt.Println(softmax_output.softmax)
+		// fmt.Println(index)
+		// fmt.Println(batchLabel)
+		for k := 0; k < batch_size; k++ {
+			if batchLabel[k][index[k]] == 1 {
+				correct++
+			}
 		}
 	}
 	Accuracy := float32(correct / numImages)
@@ -76,13 +84,15 @@ func Eval(path string, batch_size int, m Model) float32 {
 	return Accuracy
 }
 
-func OneHot(predictedLabel [][]float32) int {
+func OneHot(predictedLabel [][]float32) []int {
 	var max float32
-	var index int
-	for i := 0; i < len(predictedLabel[0]); i++ {
-		if predictedLabel[0][i] > max {
-			index = i
-			max = predictedLabel[0][i]
+	index := make([]int, len(predictedLabel))
+	for i := 0; i < len(predictedLabel); i++ {
+		for j := 0; j < len(predictedLabel[0]); j++ {
+			if predictedLabel[i][j] > max {
+				index[i] = j
+				max = predictedLabel[i][j]
+			}
 		}
 	}
 	return index
