@@ -50,7 +50,7 @@ func Eval(path string, batch_size int, m Model) float32 {
 	numImages := len(testImages.Data)
 	for i := 0; i < numImages; i += batch_size {
 		// for i := 0; i < 300; i += batch_size {
-		if i > numImages {
+		if i > numImages-batch_size {
 			continue
 		}
 		//get batch data
