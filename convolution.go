@@ -305,9 +305,9 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
 				for iiii := 0; iiii < nk; iiii++ {
 					// initialize "KGradient" to be all zeros
-					convL.KGradient[i][ii][iii][iiii] = 0
+					convL.KGradient[i][ii][iii][iiii] = float32(0)
 					// initialize "BGradient" to be all zeros
-					convL.BGradient[iiii] = 0
+					convL.BGradient[iiii] = float32(0)
 				}
 			}
 		}
@@ -343,7 +343,7 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	// This nested loop compute the gradient of kernel biases, with updates for bias field
 	// the outmost loop1: iterate through every outChannel (equivalently, nk = cd) ////
 	for i := 0; i < cd; i++ {
-		sumConc := float32(0.0)
+		sumConc := float32(0)
 		// the second outmost loop2: iterate through every image in the entire batch ///
 		for ii := 0; ii < bd; ii++ {
 			// the third outmost loop3: iterate through every single row of delta //
@@ -409,7 +409,8 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 						for w := 0; w < wk; w++ {
 							// the seventh outmost loop7: iterate through every signle kernel (nk) /
 							for n := 0; n < nk; n++ {
-								kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk+w+n] // this n is the key
+								// kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk+w+n] // this n is the key
+								kernelSum += convL.Kernel[hk-h-1][wk-w-1][c][n] * image[i][ii][h*hk+w+n] // this n is the key
 								// now in the third dimension of image, it has shape (wk * hk * nk)
 								// here nk (or equivalently cd) has replaced the previous ck
 							}
