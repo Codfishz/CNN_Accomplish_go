@@ -131,7 +131,6 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 
 	// initialize the feature slice for output
 	feature := make([][][][]float32, bx)
-
 	// construct the entire feature for potentially many images in the current batch
 	// the outmost loop1: iterate through every signle image inside the entire batch ///////
 	for b := 0; b < bx; b++ {
@@ -152,13 +151,13 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 		feature[b] = make([][][]float32, nk)
 		// ? the second outmost loop2: iterate through every signle row of many image patches //////
 		for i := 0; i < nk; i++ {
-			feature[b][i] = make([][]float32, feature_w)
+			feature[b][i] = make([][]float32, feature_h)
 			// the third outmost loop3: iterate through every signle image patch at a specific ith row /////
-			for ii := 0; ii < feature_w; ii++ {
-				feature[b][i][ii] = make([]float32, feature_h)
+			for ii := 0; ii < feature_h; ii++ {
+				feature[b][i][ii] = make([]float32, feature_w)
 				// now an image patch at ith row, iith column has been located
 				// the fourth outmost loop4: iterate through every signle kernel for this specific image patch ////
-				for iii := 0; iii < feature_h; iii++ {
+				for iii := 0; iii < feature_w; iii++ {
 					// do convolution for an image patch at [i][ii] location in the feature space by the [iii] kernel
 					// initialize a summation variable
 					patchConv := float32(0.0)
@@ -169,11 +168,11 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 							// the seventh outmost loop7: iterate through the channel of this kernel /
 							for c := 0; c < ck; c++ {
 								// sum add: (weight * value + bias)
-								patchConv += image[ii][iii][h*hk+w+c]*convL.Kernel[w][h][c][i] + convL.Bias[i]
+								patchConv += image[ii][iii][h*hk+w+c] * convL.Kernel[h][w][c][i]
 							}
 						}
 					}
-					feature[b][i][ii][iii] = patchConv
+					feature[b][i][ii][iii] = patchConv + convL.Bias[i]
 				}
 			}
 		}

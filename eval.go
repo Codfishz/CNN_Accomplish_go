@@ -80,7 +80,6 @@ func Eval(path string, batch_size int, m Model) float32 {
 		}
 	}
 	Accuracy := float32(correct / numImages)
-
 	return Accuracy
 }
 
