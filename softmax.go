@@ -56,10 +56,11 @@ func (s *Softmax) CalLoss(predict [][]float32, label [][]float32) (float32, [][]
 		delta[i] = make([]float32, classes)
 		for j := 0; j < classes; j++ {
 			delta[i][j] = softmax.softmax[i][j] - label[i][j]
+			// fmt.Println("delta:", delta[i][j])
 			loss -= float32(math.Log(float64(softmax.softmax[i][j]))) * label[i][j]
 		}
 	}
 
-	loss /= float32(batchsize * classes)
+	loss /= float32(batchsize)
 	return loss, delta
 }

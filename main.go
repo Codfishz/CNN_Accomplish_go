@@ -7,9 +7,9 @@ func main() {
 	//training process
 	fmt.Println("Start training process")
 
-	learning_rate := float32(0.01)
+	learning_rate := float32(0.95)
 	batch_size := 3
-	num_epoch := 10
+	num_epoch := 1
 	path := "MINST"
 
 	m := Train(path, learning_rate, num_epoch, batch_size)

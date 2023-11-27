@@ -48,8 +48,8 @@ func Eval(path string, batch_size int, m Model) float32 {
 	//evaluation
 	correct := 0
 	numImages := len(testImages.Data)
-	for i := 0; i < numImages; i += batch_size {
-		// for i := 0; i < 300; i += batch_size {
+	// for i := 0; i < numImages; i += batch_size {
+	for i := 0; i < 200; i += batch_size {
 		if i > numImages-batch_size {
 			continue
 		}
@@ -75,7 +75,7 @@ func Eval(path string, batch_size int, m Model) float32 {
 		// fmt.Println(batchLabel)
 		for k := 0; k < batch_size; k++ {
 			if batchLabel[k][index[k]] == 1 {
-				correct++
+				correct += 1
 			}
 		}
 	}

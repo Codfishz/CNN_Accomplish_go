@@ -73,41 +73,62 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	//softmax
 	var softmax Softmax
-
+	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < num_epoch; epoch++ {
-		for i := 0; i < len(trainImages.Data); i += batch_size {
-			// for i := 0; i < 300; i += batch_size {
+		// for i := 0; i < numImages; i += batch_size {
+		for i := 0; i < 200; i += batch_size {
 			//get batch data
+			if i > numImages-batch_size {
+				continue
+			}
 			batchData := trainImages.Data[i : i+batch_size]
 			batchLabel := trainLabels[i : i+batch_size]
 
 			//forward pass
 			conv_1_output := conv_1.Forward(batchData)
+			// fmt.Println("conv1:")
+			// fmt.Println(conv_1_output)
 			// fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
+			/*
+				fmt.Println(conv_1.Kernel)
+				fmt.Println("")
+				fmt.Println(conv_1.Bias)
+			*/
 			relu_1.Forward(conv_1_output)
+			//fmt.Println("relu1:")
+			//fmt.Println(relu_1)
 			// fmt.Println("conv:", len(conv_1_output), len(conv_1_output[0]), len(conv_1_output[0][0]), len(conv_1_output[0][0][0]))
 			pool_1_output := pool_1.Forward(conv_1_output)
+			// fmt.Println("pool1:")
+			// fmt.Println(pool_1_output)
 			// fmt.Println("pool:", len(pool_1_output), len(pool_1_output[0]), len(pool_1_output[0][0]), len(pool_1_output[0][0][0]))
 			conv_2_output := conv_2.Forward(pool_1_output)
+			fmt.Println("conv2:")
+			fmt.Println(conv_2_output)
 			relu_2.Forward(conv_2_output)
 			pool_2_output := pool_2.Forward(conv_2_output)
 			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output_reshaped)
 			loss, delta := softmax.CalLoss(linear_output, batchLabel)
-
+			// fmt.Println("weight:")
+			// fmt.Println(linear.W)
+			// fmt.Println("")
+			// fmt.Println(linear.b)
+			// fmt.Println(linear_output)
 			//calculate loss
 			delta = linear.Backward(delta, learning_rate)
 			delta_1 := Reshape2Dto4D(delta, batch_size, 16, 4, 4)
 			delta_2 := pool_2.Backward(delta_1)
 			relu_2.Backward(delta_2)
 			delta_3 := conv_2.Backward(delta_2, learning_rate)
-			relu_1.Backward(delta_3)
 			delta_4 := pool_1.Backward(delta_3)
+			relu_1.Backward(delta_4)
 			conv_1.Backward(delta_4, learning_rate)
 
 			learning_rate *= float32(math.Pow(0.95, float64(epoch+1)))
 
 			fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
+			break
 		}
 
 	}
