@@ -1,8 +1,6 @@
 package main
 
-import(
-	// "fmt"
-)
+// "fmt"
 
 type Relu struct {
 	FeatureMask *Tensor
@@ -15,10 +13,10 @@ func (relu *Relu) Forward(x [][][][]float32) {
 		for ii := 0; ii < len(x[0]); ii++ {
 			for iii := 0; iii < len(x[0][0]); iii++ {
 				for iiii := 0; iiii < len(x[0][0][0]); iiii++ {
+					relu.FeatureMask.Data[i][ii][iii][iiii] = x[i][ii][iii][iiii]
 					if x[i][ii][iii][iiii] < 0 {
 						x[i][ii][iii][iiii] = 0
 					}
-					relu.FeatureMask.Data[i][ii][iii][iiii] = x[i][ii][iii][iiii]
 				}
 			}
 		}
