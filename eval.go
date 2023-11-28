@@ -49,6 +49,7 @@ func Eval(path string, batch_size int, m Model) float32 {
 	correct := 0
 	numImages := len(testImages.Data)
 	for i := 0; i < numImages; i += batch_size {
+		// for i := 0; i < 300; i += batch_size {
 		if i > numImages-batch_size {
 			continue
 		}
@@ -78,7 +79,7 @@ func Eval(path string, batch_size int, m Model) float32 {
 			}
 		}
 	}
-	Accuracy := float32(correct / numImages)
+	Accuracy := float32(correct) / float32(numImages)
 	return Accuracy
 }
 
