@@ -43,7 +43,6 @@ func Eval(path string, batch_size int, m Model) float32 {
 	linear.W = w3
 	linear.b = b3
 	//softmax
-	var softmax Softmax
 
 	//evaluation
 	correct := 0
@@ -67,8 +66,8 @@ func Eval(path string, batch_size int, m Model) float32 {
 		pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 		linear_output := linear.Forward(pool_2_output_reshaped)
 
-		softmax_output := softmax.predict(linear_output)
-		index := OneHot(softmax_output.softmax)
+		softmax_output := SoftmaxPredict(linear_output)
+		index := OneHot(softmax_output)
 		// fmt.Println(batchData[0])
 		// fmt.Println(softmax_output.softmax)
 		// fmt.Println(index)

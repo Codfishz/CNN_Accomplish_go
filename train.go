@@ -72,7 +72,6 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 	linear := NewLinear(256, 10)
 
 	//softmax
-	var softmax Softmax
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < numImages; i += batch_size {
@@ -110,7 +109,7 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 			pool_2_output := pool_2.Forward(conv_2_output)
 			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output_reshaped)
-			loss, delta := softmax.CalLoss(linear_output, batchLabel)
+			loss, delta := SoftmaxCalLoss(linear_output, batchLabel)
 			// fmt.Println("weight:")
 			// fmt.Println(linear.W)
 			// fmt.Println("")

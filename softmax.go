@@ -2,15 +2,13 @@ package main
 
 import (
 	"math"
+	// "fmt"
 )
 
-type Softmax struct {
-	softmax [][]float32
-}
 
-func (s *Softmax) predict(predict [][]float32) Softmax {
+func SoftmaxPredict(predict [][]float32) [][]float32 {
 	batchsize, classes := len(predict), len(predict[0])
-	s.softmax = make([][]float32, batchsize)
+	softmax := make([][]float32, batchsize)
 
 	for i := 0; i < batchsize; i++ {
 		//Initialize softmax object
@@ -23,6 +21,7 @@ func (s *Softmax) predict(predict [][]float32) Softmax {
 				maxValue = predict[i][j]
 			}
 		}
+		// fmt.Println("maximum:", maxValue)
 
 		// Calculate the softmax values given the forward propagation.
 		sumExp := float32(0.0)
@@ -36,18 +35,21 @@ func (s *Softmax) predict(predict [][]float32) Softmax {
 			predictTmp[j] /= sumExp
 		}
 
-		s.softmax[i] = predictTmp
+		softmax[i] = predictTmp
+		// fmt.Println(predictTmp)
 	}
-	return *s
+	return softmax
 }
 
-func (s *Softmax) CalLoss(predict [][]float32, label [][]float32) (float32, [][]float32) {
+func SoftmaxCalLoss(predict [][]float32, label [][]float32) (float32, [][]float32) {
 	batchsize, classes := len(predict), len(predict[0])
 	// Calculate the softmax values
 
-	var softmax Softmax
-	softmax = s.predict(predict)
-
+	softmax := SoftmaxPredict(predict)
+	// fmt.Println("predict:")
+	// fmt.Println(softmax[0])
+	// fmt.Println(softmax[1])
+	// fmt.Println(softmax[2])
 	loss := float32(0.0)
 	//Initialize delta matrix
 	delta := make([][]float32, batchsize)
@@ -55,12 +57,13 @@ func (s *Softmax) CalLoss(predict [][]float32, label [][]float32) (float32, [][]
 	for i := 0; i < batchsize; i++ {
 		delta[i] = make([]float32, classes)
 		for j := 0; j < classes; j++ {
-			delta[i][j] = softmax.softmax[i][j] - label[i][j]
+			delta[i][j] = softmax[i][j] - label[i][j]
 			// fmt.Println("delta:", delta[i][j])
-			loss -= float32(math.Log(float64(softmax.softmax[i][j]))) * label[i][j]
+			loss -= float32(math.Log(float64(softmax[i][j]))) * label[i][j]
+			// fmt.Println(float32(math.Log(float64(softmax[i][j]))))
 		}
 	}
-
+	// fmt.Println("loss adds up:", loss)
 	loss /= float32(batchsize)
 	return loss, delta
 }

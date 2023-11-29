@@ -142,7 +142,8 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 		// Note: cx and ck should be equal, this function will panic if not
 		// also store this image inside the Conv struct
 		convL.ImageCol[b] = image
-
+		//fmt.Println(b, "th forward image2col:")
+		//fmt.Println(image)
 		// Then do the actual convolution for every image patch
 		// image has shape: (feature_h) by (feature_w) by (wk * hk * cx)
 		// kernel has shape: (wk) by (hk) by (ck) by (nk), equivalently, make kernel into shape: (wk * hk * cx) by (nk)
@@ -161,6 +162,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 					// do convolution for an image patch at [i][ii] location in the feature space by the [iii] kernel
 					// initialize a summation variable
 					patchConv := float32(0.0)
+					position := 0
 					// the fifth outmost loop5: iterate through the height of this kernel ///
 					for h := 0; h < hk; h++ {
 						// the sixth outmost loop6: iterate through the width of this kernel //
@@ -168,7 +170,8 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 							// the seventh outmost loop7: iterate through the channel of this kernel /
 							for c := 0; c < ck; c++ {
 								// sum add: (weight * value + bias)
-								patchConv += image[ii][iii][h*hk+w+c] * convL.Kernel[h][w][c][i]
+								patchConv += image[ii][iii][position] * convL.Kernel[h][w][c][i]
+								position += 1
 							}
 						}
 					}
@@ -244,6 +247,7 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride
 		// the second outmost loop2: iterate through every signle column of one specific row of many image patches ////
 		for ii := 0; ii < feature_w; ii++ {
 			imagePatches[i][ii] = make([]float32, (wk * hk * ck))
+			position := 0
 			// the third outmost loop3: iterate through the height of the given image patch (or kernel) ///
 			for h := 0; h < hk; h++ {
 				// the fourth outmost loop4: iterate through the width of the given image patch (or kernel) //
@@ -254,13 +258,13 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride
 						// index of current image patch pixel's col: ii*stride+w
 						// fmt.Println(i, ii, h*hk + w + c, c, i*stride+h, ii*stride+w)
 						// fmt.Println(h, w, h*hk + w + c)
-						imagePatches[i][ii][h*hk+w+c] = image[c][i*stride+h][ii*stride+w]
+						imagePatches[i][ii][position] = image[c][i*stride+h][ii*stride+w]
+						position += 1
 					}
 				}
 			}
 		}
 	}
-
 	return imagePatches
 }
 
@@ -381,6 +385,10 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	} else {
 		deltaPad = delta
 	}
+	// fmt.Println(deltaPad[0])
+	// fmt.Println(deltaPad[1])
+	// fmt.Println(deltaPad[2])
+
 	// Notice that after potential padding, the "deltaPad" slice should have the same shape as "convL.Data"
 
 	// Finally, calculate the value for "deltaBackward" for output
@@ -389,6 +397,8 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	for b := 0; b < bx; b++ {
 		//fmt.Println(hx, wx, cd, wk, hk, convL.Stride)
 		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, convL.Stride) // hx=wx=12
+		// fmt.Println(b, "th image2col:")
+		// fmt.Println(image)
 		// image has shape: hx by wx by (wk * hk * nk)
 		// ATTENTION HERE: cd (# of outChannels to be concatenated) dimension
 		// is different from ck, when this function was last called
@@ -396,13 +406,14 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 		// wx * hx * ck, corresponding to the shape in "deltaBackward"
 
 		// the second outmost loop2: iterate through every signle row of "image" //////
-		for i := 0; i < hx; i++ {
+		for i := 0; i < hx; i++ { // hx
 			// the third outmost loop3: iterate through every signle column of "image" /////
-			for ii := 0; ii < wx; ii++ {
+			for ii := 0; ii < wx; ii++ { // wx
 				// now that an image patch in "image" has been located
 				// the fourth outmost loop4: iterate through every signle channel of the image (inChannel) ////
 				for c := 0; c < cx; c++ {
 					kernelSum := float32(0.0)
+					position := 0
 					// the fifth outmost loop5: iterate through every signle row of kernel ///
 					for h := 0; h < hk; h++ {
 						// the sixth outmost loop6: iterate through every signle column of kernel //
@@ -410,7 +421,9 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 							// the seventh outmost loop7: iterate through every signle kernel (nk) /
 							for n := 0; n < nk; n++ {
 								// kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk+w+n] // this n is the key
-								kernelSum += convL.Kernel[hk-h-1][wk-w-1][c][n] * image[i][ii][h*hk+w+n] // this n is the key
+								kernelSum += convL.Kernel[hk-h-1][wk-w-1][c][n] * image[i][ii][position] // this n is the key
+								position += 1
+								// fmt.Println(convL.Kernel[hk-h-1][wk-w-1][c][n], image[i][ii][h*wk*nk+w*nk+n], h*wk*nk+w*nk+n)
 								// now in the third dimension of image, it has shape (wk * hk * nk)
 								// here nk (or equivalently cd) has replaced the previous ck
 							}

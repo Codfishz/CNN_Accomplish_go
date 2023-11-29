@@ -2,6 +2,7 @@ package main
 
 import (
 	"math"
+	//"fmt"
 )
 
 // Pooling is a struct for a max pooling layer.
@@ -53,9 +54,9 @@ func (pool *Pooling) Forward(x [][][][]float32) [][][][]float32 {
 
 				}
 			}
+			//fmt.Println(pool.FeatureMask.Data[bi][ci])
 		}
 	}
-
 	return feature.Data
 }
 
