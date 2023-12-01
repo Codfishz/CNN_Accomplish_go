@@ -9,27 +9,27 @@ package main
 
 import (
 	"math"
-	"math/rand"
+	// "math/rand"
 	//"fmt"
 )
 
 // This is a struct for a single convolution layer
 type Convolution struct {
-	Data      [][][][]float32
+	Data      [][][][]float64
 	Pad       int
 	Stride    int
-	Kernel    [][][][]float32
-	Bias      []float32
-	KGradient [][][][]float32
-	BGradient []float32
-	ImageCol  [][][][]float32
+	Kernel    [][][][]float64
+	Bias      []float64
+	KGradient [][][][]float64
+	BGradient []float64
+	ImageCol  [][][][]float64
 }
 
 // This InitializeConvolutionLayer function build a Convolution struct as one layer
 // This function takes as input one slice of ints as the intended kernel's shape,
 // plus three int parameters for Pad and Stride fields, as well as a number of all Images (the batch size)
 // It returns a pointer to the new convolution layer initialized
-func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages int) *Convolution {
+func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages int) *Convolution {
 
 	var convLayer Convolution // one convolution layer
 
@@ -44,47 +44,49 @@ func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages i
 	convLayer.Pad = pad
 	convLayer.Stride = stride
 
-	scale := float32(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
+	// scale := float64(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
 
 	// initialize "Kernel"
 	convLayer.Kernel = kernel
 
 	for i := 0; i < kernelShape[0]; i++ {
-		//convLayer.Kernel[i] = make([][][]float32, kernelShape[1])
+		//convLayer.Kernel[i] = make([][][]float64, kernelShape[1])
 		for ii := 0; ii < kernelShape[1]; ii++ {
-			//convLayer.Kernel[i][ii] = make([][]float32, kernelShape[2])
+			//convLayer.Kernel[i][ii] = make([][]float64, kernelShape[2])
 			for iii := 0; iii < kernelShape[2]; iii++ {
-				//convLayer.Kernel[i][ii][iii] = make([]float32, kernelShape[3])
+				//convLayer.Kernel[i][ii][iii] = make([]float64, kernelShape[3])
 				for iiii := 0; iiii < kernelShape[3]; iiii++ {
-					convLayer.Kernel[i][ii][iii][iiii] = float32(rand.NormFloat64()) / scale
+					// convLayer.Kernel[i][ii][iii][iiii] = float32(rand.NormFloat64()) / scale
+					convLayer.Kernel[i][ii][iii][iiii] = float64(0.1)
 				}
 			}
 		}
 	}
 
 	// initialize "Bias"
-	convLayer.Bias = make([]float32, kernelShape[3])
+	convLayer.Bias = make([]float64, kernelShape[3])
 	for i := 0; i < len(convLayer.Bias); i++ {
-		convLayer.Bias[i] = float32(rand.NormFloat64()) / scale
+		// convLayer.Bias[i] = float64(rand.NormFloat64()) / scale
+		convLayer.Bias[i] = float64(0.1)
 	}
 
 	// initialize "KGradient"
-	convLayer.KGradient = make([][][][]float32, kernelShape[0])
+	convLayer.KGradient = make([][][][]float64, kernelShape[0])
 	for i := 0; i < kernelShape[0]; i++ {
-		convLayer.KGradient[i] = make([][][]float32, kernelShape[1])
+		convLayer.KGradient[i] = make([][][]float64, kernelShape[1])
 		for ii := 0; ii < kernelShape[1]; ii++ {
-			convLayer.KGradient[i][ii] = make([][]float32, kernelShape[2])
+			convLayer.KGradient[i][ii] = make([][]float64, kernelShape[2])
 			for iii := 0; iii < kernelShape[2]; iii++ {
-				convLayer.KGradient[i][ii][iii] = make([]float32, kernelShape[3])
+				convLayer.KGradient[i][ii][iii] = make([]float64, kernelShape[3])
 			}
 		}
 	}
 
 	// initialize "BGradient"
-	convLayer.BGradient = make([]float32, kernelShape[3])
+	convLayer.BGradient = make([]float64, kernelShape[3])
 
 	// initialize "ImageCol"
-	convLayer.ImageCol = make([][][][]float32, numImages)
+	convLayer.ImageCol = make([][][][]float64, numImages)
 
 	pointer := &convLayer
 	return pointer
@@ -95,8 +97,8 @@ func InitializeConvolutionLayer(kernel [][][][]float32, pad, stride, numImages i
 // the first input is a data of all images in the current single batch;
 // the second input is a counter of the index of the first image in this single batch, for purposes of storing image patch feature
 // This method returns a feature layer which we obtained after the convolution
-// This ouput has type [][][][]float32, whose shape is given by: (bx, imageNum) * (featureHeight) * (featureWidth) * (nk, kernelNum)
-func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
+// This ouput has type [][][][]float64, whose shape is given by: (bx, imageNum) * (featureHeight) * (featureWidth) * (nk, kernelNum)
+func (convL *Convolution) Forward(x [][][][]float64) [][][][]float64 {
 
 	// copy over the input data to the convolution layer struct
 	// make padding when necessary
@@ -130,7 +132,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 	feature_w := int(math.Floor(float64(wx-wk)/float64(convL.Stride))) + 1 // width of feature
 
 	// initialize the feature slice for output
-	feature := make([][][][]float32, bx)
+	feature := make([][][][]float64, bx)
 	// construct the entire feature for potentially many images in the current batch
 	// the outmost loop1: iterate through every signle image inside the entire batch ///////
 	for b := 0; b < bx; b++ {
@@ -149,19 +151,19 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 		// kernel has shape: (wk) by (hk) by (ck) by (nk), equivalently, make kernel into shape: (wk * hk * cx) by (nk)
 		// (image .* kernel) has shape:  (feature_h * feature_w) by (nk)
 
-		feature[b] = make([][][]float32, nk)
+		feature[b] = make([][][]float64, nk)
 		// ? the second outmost loop2: iterate through every signle row of many image patches //////
 		for i := 0; i < nk; i++ {
-			feature[b][i] = make([][]float32, feature_h)
+			feature[b][i] = make([][]float64, feature_h)
 			// the third outmost loop3: iterate through every signle image patch at a specific ith row /////
 			for ii := 0; ii < feature_h; ii++ {
-				feature[b][i][ii] = make([]float32, feature_w)
+				feature[b][i][ii] = make([]float64, feature_w)
 				// now an image patch at ith row, iith column has been located
 				// the fourth outmost loop4: iterate through every signle kernel for this specific image patch ////
 				for iii := 0; iii < feature_w; iii++ {
 					// do convolution for an image patch at [i][ii] location in the feature space by the [iii] kernel
 					// initialize a summation variable
-					patchConv := float32(0.0)
+					patchConv := float64(0.0)
 					position := 0
 					// the fifth outmost loop5: iterate through the height of this kernel ///
 					for h := 0; h < hk; h++ {
@@ -188,7 +190,7 @@ func (convL *Convolution) Forward(x [][][][]float32) [][][][]float32 {
 // The original 4-dimension data has shape: bx * cx * hx * wx
 // This function adds number of Pad zeros to the outer rim of the hx * wx dimension, such that the data
 // will be transformed and returned with shape: bx * cx * (Pad + hx + Pad) * (Pad + wx + Pad)
-func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
+func PadLayer(data [][][][]float64, pad int) [][][][]float64 {
 
 	// obtain the shape of the data
 	bx := len(data)          // number of image
@@ -197,20 +199,20 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 	wx := len(data[0][0][0]) // width
 	//fmt.Println(bx, cx, hx, wx)
 	// fmt.Println(bx, cx, hx, wx, pad)
-	dataNew := make([][][][]float32, bx) // for output
+	dataNew := make([][][][]float64, bx) // for output
 	// the outmost loop1: iterate through every single image inside the entire batch ////
 	for i := 0; i < bx; i++ {
-		dataNew[i] = make([][][]float32, cx)
+		dataNew[i] = make([][][]float64, cx)
 		// the second outmost loop2: iterate through every signle channel of a specific image ///
 		for ii := 0; ii < cx; ii++ {
-			dataNew[i][ii] = make([][]float32, (pad + hx + pad))
+			dataNew[i][ii] = make([][]float64, (pad + hx + pad))
 			// the third outmost loop3: iterate through rows of a specific image channel //
 			for iii := 0; iii < (pad + hx + pad); iii++ {
 				// for the first and last "# of pad" rows, make slices of zeros
 				if iii < pad || (pad+hx+pad-iii) <= pad {
-					dataNew[i][ii][iii] = make([]float32, (pad + wx + pad))
+					dataNew[i][ii][iii] = make([]float64, (pad + wx + pad))
 				} else { // copy over original row to the center of new row, with leftmost and rightmmost "# of zeros" equal pad
-					dataNew[i][ii][iii] = make([]float32, (pad + wx + pad))
+					dataNew[i][ii][iii] = make([]float64, (pad + wx + pad))
 					// the fourth outmost loop4: iterate through columns of a specific row of an image's specific channel /
 					for iiii := 0; iiii < wx; iiii++ { // copy over
 						//fmt.Println(len(dataNew), len(dataNew[0]), len(dataNew[0][0]), len(dataNew[0][0][0]))
@@ -226,12 +228,12 @@ func PadLayer(data [][][][]float32, pad int) [][][][]float32 {
 }
 
 // The ImageToColumn function takes as input some parameters, including the following:
-// a single image of type [][][]float32, a feature map width of type int, a feature map heigt of type int,
+// a single image of type [][][]float64, a feature map width of type int, a feature map heigt of type int,
 // a number of input image channels of type int, a number of kernel channels of type int,
 // a number of kernel width of type int, a number of kernel heigt of type int, and a stride parameter of type int.
 // This function reshape one input image data to a matrix for output, having feature_h rows and feature_w columns,
 // each "pixel" of this matrix correspond to an image patch of the given image, whoes shape is given by (wk * hk * ck).
-func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride int) [][][]float32 {
+func ImageToColumn(image [][][]float64, feature_h, feature_w, ck, hk, wk, stride int) [][][]float64 {
 	// check whether image and kernel have the same number of channels, panic otherwise:
 	/*
 		if cx != ck {
@@ -239,14 +241,14 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride
 		}
 	*/
 
-	// first initialize a [][][]float32 variable for output
-	imagePatches := make([][][]float32, feature_h)
+	// first initialize a [][][]float64 variable for output
+	imagePatches := make([][][]float64, feature_h)
 	// the outmost loop1: iterate through every signle row of many image patches /////
 	for i := 0; i < feature_h; i++ {
-		imagePatches[i] = make([][]float32, feature_w)
+		imagePatches[i] = make([][]float64, feature_w)
 		// the second outmost loop2: iterate through every signle column of one specific row of many image patches ////
 		for ii := 0; ii < feature_w; ii++ {
-			imagePatches[i][ii] = make([]float32, (wk * hk * ck))
+			imagePatches[i][ii] = make([]float64, (wk * hk * ck))
 			position := 0
 			// the third outmost loop3: iterate through the height of the given image patch (or kernel) ///
 			for h := 0; h < hk; h++ {
@@ -271,10 +273,10 @@ func ImageToColumn(image [][][]float32, feature_h, feature_w, ck, hk, wk, stride
 // This backward method is defined for a Conv struct, namely a convolutional layer, to compute the back propagation
 // Regardless of the fact that it is a method, we have two input variable:
 // the first input is a delta of type Tensor computed from the last returning layer;
-// the second input is a float32 parameter representing the learning rate
+// the second input is a float64 parameter representing the learning rate
 // This method returns another updated delta by this current convolution layer
-// This ouput has type [][][][]float32
-func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][]float32 {
+// This ouput has type [][][][]float64
+func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][]float64 {
 
 	////////////////////////////// Module 0: Essential Shapes
 	// obtain the shape of the data
@@ -301,25 +303,25 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 
 	////////////////////////////// Module 1: Compute kernel & bias gradients
 	// first initialize both the KGradient and BGradient fields to be all zeros to record necessary changes:
-	for i := 0; i < hk; i++ {
-		// the second outmost loop2: iterate through all columns of the kernel ///
-		for ii := 0; ii < wk; ii++ {
-			// the third outmost loop3: iterate through all channels of this pixel //
-			for iii := 0; iii < ck; iii++ {
-				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
-				for iiii := 0; iiii < nk; iiii++ {
-					// initialize "KGradient" to be all zeros
-					convL.KGradient[i][ii][iii][iiii] = float32(0)
-					// initialize "BGradient" to be all zeros
-					convL.BGradient[iiii] = float32(0)
-				}
-			}
-		}
-	}
+	// for i := 0; i < hk; i++ {
+	// 	// the second outmost loop2: iterate through all columns of the kernel ///
+	// 	for ii := 0; ii < wk; ii++ {
+	// 		// the third outmost loop3: iterate through all channels of this pixel //
+	// 		for iii := 0; iii < ck; iii++ {
+	// 			// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
+	// 			for iiii := 0; iiii < nk; iiii++ {
+	// 				// initialize "KGradient" to be all zeros
+	// 				convL.KGradient[i][ii][iii][iiii] = float64(0)
+	// 				// initialize "BGradient" to be all zeros
+	// 				convL.BGradient[iiii] = float64(0)
+	// 			}
+	// 		}
+	// 	}
+	// }
 
 	// Then compute the weight of Kernel Gradient
 	// This nested loop compute the gradient of kernel weights
-	bxFloat32 := float32(bx)
+	bxfloat64 := float64(bx)
 	// the outmost loop1: iterate through every signle image inside the entire batch ///////
 	for b := 0; b < bd; b++ {
 		// the second outmost loop2: iterate through every signle row of delta //////
@@ -328,16 +330,30 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 			for ii := 0; ii < wd; ii++ {
 				// the fourth outmost loop4: iterate through every signle outChannel (equivalently, nk = cd) ////
 				for iii := 0; iii < cd; iii++ {
+					position := 0
 					// the fifth outmost loop5: iterate through the height of the given image patch (or kernel) ///
 					for h := 0; h < hk; h++ {
 						// the sixth outmost loop6: iterate through the width of the given image patch (or kernel) //
 						for w := 0; w < wk; w++ {
 							// the most inner loop7: iterate through all inChannels (number of image channels) /
 							for c := 0; c < ck; c++ {
-								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][h*hk+w+c] * delta[b][iii][i][ii] / bxFloat32
+								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][position] * delta[b][iii][i][ii]
+								position ++
 							}
 						}
 					}
+				}
+			}
+		}
+	}
+	
+	for h := 0; h < hk; h++ {
+		// the sixth outmost loop6: iterate through the width of the given image patch (or kernel) //
+		for w := 0; w < wk; w++ {
+			// the most inner loop7: iterate through all inChannels (number of image channels) /
+			for c := 0; c < ck; c++ {
+				for iii := 0; iii < cd; iii++ {
+					convL.KGradient[h][w][c][iii] /= bxfloat64
 				}
 			}
 		}
@@ -347,7 +363,7 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 	// This nested loop compute the gradient of kernel biases, with updates for bias field
 	// the outmost loop1: iterate through every outChannel (equivalently, nk = cd) ////
 	for i := 0; i < cd; i++ {
-		sumConc := float32(0)
+		sumConc := float64(0)
 		// the second outmost loop2: iterate through every image in the entire batch ///
 		for ii := 0; ii < bd; ii++ {
 			// the third outmost loop3: iterate through every single row of delta //
@@ -359,24 +375,25 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 				}
 			}
 		}
-		convL.BGradient[i] = sumConc / bxFloat32
+		convL.BGradient[i] += sumConc
+		convL.BGradient[i] /= bxfloat64
 	}
 
 	////////////////////////////// Module 2: Compute deltaBackward for output for the "next" shadower layer
 	// Initialize a tensor for output as the "delta" after current convolution layer's back propagation
-	deltaBackward := make([][][][]float32, bx)
+	deltaBackward := make([][][][]float64, bx)
 	for i := 0; i < bx; i++ {
-		deltaBackward[i] = make([][][]float32, cx)
+		deltaBackward[i] = make([][][]float64, cx)
 		for ii := 0; ii < cx; ii++ {
-			deltaBackward[i][ii] = make([][]float32, hx)
+			deltaBackward[i][ii] = make([][]float64, hx)
 			for iii := 0; iii < hx; iii++ {
-				deltaBackward[i][ii][iii] = make([]float32, wx)
+				deltaBackward[i][ii][iii] = make([]float64, wx)
 			}
 		}
 	}
 
 	// perform any padding if necessary
-	var deltaPad [][][][]float32
+	var deltaPad [][][][]float64
 	if hd-hk+1 != hx {
 		pad := (hx - hd + hk - 1) / 2 // integer division
 		//fmt.Println(len(delta), len(delta[0]), len(delta[0][0]), len(delta[0][0][0]))
@@ -412,7 +429,7 @@ func (convL *Convolution) Backward(delta [][][][]float32, lRate float32) [][][][
 				// now that an image patch in "image" has been located
 				// the fourth outmost loop4: iterate through every signle channel of the image (inChannel) ////
 				for c := 0; c < cx; c++ {
-					kernelSum := float32(0.0)
+					kernelSum := float64(0.0)
 					position := 0
 					// the fifth outmost loop5: iterate through every signle row of kernel ///
 					for h := 0; h < hk; h++ {

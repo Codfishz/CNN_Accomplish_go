@@ -1,42 +1,44 @@
 package main
 
 import (
-	"math"
-	"math/rand"
+	// "math"
+	// "math/rand"
 	// "fmt"
 	// "time"
 )
 
 // Linear represents a fully connected neural network layer.
 type Linear struct {
-	W           [][]float32 // Weight matrix, inChannel x outChannel
-	b           []float32	// Bias vector, outChannel
-	WGradient   [][]float32 // Weight gradient matrix
-	bGradient   []float32	// Bias gradient vector
-	x           [][]float32 // Input data
+	W           [][]float64 // Weight matrix, inChannel x outChannel
+	b           []float64	// Bias vector, outChannel
+	WGradient   [][]float64 // Weight gradient matrix
+	bGradient   []float64	// Bias gradient vector
+	x           [][]float64 // Input data
 	inChannel   int			// Number of input features
 	outChannel  int			// Number of output features
 }
 
 // NewLinear creates a new Linear layer with the specified input and output sizes.
 func NewLinear(inChannel, outChannel int) *Linear {
-	scale := math.Sqrt(float64(inChannel) / 2)
+	// scale := math.Sqrt(float64(inChannel) / 2)
 
 	// Initialize the weights and biases with random values (gradients will be zero)
-	W := make([][]float32, inChannel)
-	WGradient := make([][]float32, inChannel)
+	W := make([][]float64, inChannel)
+	WGradient := make([][]float64, inChannel)
 	for i := range W {
-		W[i] = make([]float32, outChannel)
-		WGradient[i] = make([]float32, outChannel)
+		W[i] = make([]float64, outChannel)
+		WGradient[i] = make([]float64, outChannel)
 		for j := range W[i] {
-			W[i][j] = float32(rand.NormFloat64() / scale)
+			// W[i][j] = float64(rand.NormFloat64() / scale)
+			W[i][j] = float64(0.1)
 		}
 	}
 
-	b := make([]float32, outChannel)
-	bGradient := make([]float32, outChannel)
+	b := make([]float64, outChannel)
+	bGradient := make([]float64, outChannel)
 	for i := range b {
-		b[i] = float32(rand.NormFloat64() / scale)
+		// b[i] = float64(rand.NormFloat64() / scale)
+		b[i] = float64(0.1)
 		bGradient[i] = 0
 	}
 
@@ -52,13 +54,22 @@ func NewLinear(inChannel, outChannel int) *Linear {
 }
 
 // Forward computes the forward pass of the linear layer.
-func (l *Linear) Forward(x [][]float32) [][]float32 {
-	l.x = x
-	xForward := make([][]float32, len(x)) // next layer input
+func (l *Linear) Forward(x [][]float64) [][]float64 {
+	// copy x to l.x
+	l.x = make([][]float64, len(x))
+	for i := range x {
+		l.x[i] = make([]float64, len(x[i]))
+		for j := range x[i] {
+			l.x[i][j] = x[i][j]
+		}
+	}
+
+
+	xForward := make([][]float64, len(x)) // next layer input
 
 	// xForward = x * W + b
 	for i := range xForward {
-		xForward[i] = make([]float32, l.outChannel)
+		xForward[i] = make([]float64, l.outChannel)
 		for j := range xForward[i] {
 			sum := l.b[j]
 			for k := range x[i] {
@@ -72,29 +83,29 @@ func (l *Linear) Forward(x [][]float32) [][]float32 {
 }
 
 // Backward computes the backward pass of the linear layer.
-func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
+func (l *Linear) Backward(delta [][]float64, learningRate float64) [][]float64 {
 	batchSize := len(delta)
-	deltaBackward := make([][]float32, batchSize) // previous layer delta
+	deltaBackward := make([][]float64, batchSize) // previous layer delta
 
 	for i := range l.WGradient {
-		for j := range l.WGradient[0] {
-			l.WGradient[i][j] = float32(0)
-			l.bGradient[j] = float32(0)
+		for j := range l.WGradient[i] {
+			l.WGradient[i][j] = float64(0.0)
+			l.bGradient[j] = float64(0.0)
 		}
 	}
 
 	// wGradient = x^T * delta / batchSize
 	// deltaBackward = delta * w^T
-	batchSizeF32 := float32(batchSize)
+	batchSizeF32 := float64(batchSize)
 	// fmt.Println(len(l.WGradient), len(l.WGradient[0]))
 	for i := range deltaBackward { // 100
-		deltaBackward[i] = make([]float32, l.inChannel)
+		deltaBackward[i] = make([]float64, l.inChannel)
 		for j := range deltaBackward[i] { // 256
 			for k := range delta[i] { // 10
 				l.WGradient[j][k] += l.x[i][j] * delta[i][k] / batchSizeF32
 				deltaBackward[i][j] += delta[i][k] * l.W[j][k]
 			}
-			// l.WGradient[j][i] /= float32(batchSize)
+			// l.WGradient[j][i] /= float64(batchSize)
 		}
 	}
 
@@ -103,7 +114,7 @@ func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
 		for j := range delta {
 			l.bGradient[i] += delta[j][i]  / batchSizeF32
 		}
-		// l.bGradient[i] /= float32(batchSize)
+		// l.bGradient[i] /= float64(batchSize)
 	}
 
 	// Backpropagation
@@ -135,12 +146,12 @@ func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
 // 	layer := NewLinear(inChannels, outChannels)
 
 // 	// Example input (batch of images)
-// 	x := make([][]float32, 2) // Batch size of 2
+// 	x := make([][]float64, 2) // Batch size of 2
 // 	for i := range x {
-// 		x[i] = make([]float32, inChannels)
+// 		x[i] = make([]float64, inChannels)
 // 		// Fill x[i]
 // 		for j := range x[i] {
-// 			x[i][j] = rand.Float32()
+// 			x[i][j] = rand.float64()
 // 		}
 // 	}
 
@@ -161,12 +172,12 @@ func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
 // 	}
 
 // 	// Assume some gradient coming back from the next layer
-// 	delta := make([][]float32, 2) // Batch size of 2
+// 	delta := make([][]float64, 2) // Batch size of 2
 // 	for i := range delta {
-// 		delta[i] = make([]float32, outChannels)
+// 		delta[i] = make([]float64, outChannels)
 // 		// Fill delta[i]
 // 		for j := range delta[i] {
-// 			delta[i][j] = rand.Float32()
+// 			delta[i][j] = rand.float64()
 // 		}
 // 	}
 
@@ -176,7 +187,7 @@ func (l *Linear) Backward(delta [][]float32, learningRate float32) [][]float32 {
 // }
 
 // // printData prints the data in a 2D slice
-// func printData(data []float32) {
+// func printData(data []float64) {
 // 	for i := 0; i < len(data); i++ {
 // 		fmt.Printf("%.4f ", data[i])
 // 	}

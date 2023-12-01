@@ -16,7 +16,7 @@ import (
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
-func Train(path string, learning_rate float32, num_epoch int, batch_size int) *Model {
+func Train(path string, learning_rate float64, num_epoch int, batch_size int) *Model {
 
 	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte/train-images-idx3-ubyte")
 	if err != nil {
@@ -30,13 +30,13 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	//construct model
 	data := []int{5, 5, 1, 6}
-	kernel_1 := make([][][][]float32, data[0])
+	kernel_1 := make([][][][]float64, data[0])
 	for i := 0; i < data[0]; i++ {
-		kernel_1[i] = make([][][]float32, data[1])
+		kernel_1[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
-			kernel_1[i][j] = make([][]float32, data[2])
+			kernel_1[i][j] = make([][]float64, data[2])
 			for k := 0; k < data[2]; k++ {
-				kernel_1[i][j][k] = make([]float32, data[3])
+				kernel_1[i][j][k] = make([]float64, data[3])
 			}
 		}
 	}
@@ -50,13 +50,13 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	//conv2
 	data = []int{5, 5, 6, 16}
-	kernel_2 := make([][][][]float32, data[0])
+	kernel_2 := make([][][][]float64, data[0])
 	for i := 0; i < data[0]; i++ {
-		kernel_2[i] = make([][][]float32, data[1])
+		kernel_2[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
-			kernel_2[i][j] = make([][]float32, data[2])
+			kernel_2[i][j] = make([][]float64, data[2])
 			for k := 0; k < data[2]; k++ {
-				kernel_2[i][j][k] = make([]float32, data[3])
+				kernel_2[i][j][k] = make([]float64, data[3])
 			}
 		}
 	}
@@ -73,8 +73,10 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 	//softmax
 	numImages := len(trainImages.Data)
-	for epoch := 0; epoch < num_epoch; epoch++ {
-		for i := 0; i < numImages; i += batch_size {
+	// for epoch := 0; epoch < num_epoch; epoch++ {
+	// 	for i := 0; i < numImages; i += batch_size {
+	for epoch := 0; epoch < 1; epoch++ {
+		for i := 0; i < 5; i ++ {
 			//get batch data
 			if i > numImages-batch_size {
 				continue
@@ -84,8 +86,13 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 
 			//forward pass
 			conv_1_output := conv_1.Forward(batchData)
-			// fmt.Println("conv1:")
-			// fmt.Println(conv_1_output)
+			fmt.Println("conv1:")
+			fmt.Println(conv_1_output[1][0][7][14])
+			fmt.Println("Kernel:")
+			fmt.Println(conv_1.Kernel)
+			fmt.Println("Bias:")
+			fmt.Println(conv_1.Bias)
+			fmt.Println("")
 			// fmt.Println(conv_1.Bias)
 			// fmt.Println(conv_1.Kernel)
 			// fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
@@ -125,7 +132,7 @@ func Train(path string, learning_rate float32, num_epoch int, batch_size int) *M
 			relu_1.Backward(delta_4)
 			conv_1.Backward(delta_4, learning_rate)
 
-			learning_rate *= float32(math.Pow(0.95, float64(epoch+1)))
+			learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
 			if i % 300 == 0 {
 				fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
 			}
@@ -173,23 +180,23 @@ func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 
 	//begin loading image data
 	//create tensor to store all Images
-	tensorData := make([][][][]float32, numImages)
+	tensorData := make([][][][]float64, numImages)
 
 	for i := uint32(0); i < numImages; i++ {
 		//set the channel number to 1 for gray scale image
-		image := make([][][]float32, 1)
-		image[0] = make([][]float32, numRows)
+		image := make([][][]float64, 1)
+		image[0] = make([][]float64, numRows)
 
 		//go through all rows
 		for r := uint32(0); r < numRows; r++ {
-			image[0][r] = make([]float32, numCols)
+			image[0][r] = make([]float64, numCols)
 
 			//go through all columns
 			for c := uint32(0); c < numCols; c++ {
 				//read pixel information
 				var pixel byte
 				binary.Read(reader, binary.BigEndian, &pixel)
-				image[0][r][c] = float32(pixel) / 255.0
+				image[0][r][c] = float64(pixel) / 255.0
 			}
 		}
 		tensorData[i] = image
@@ -201,7 +208,7 @@ func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 // load training label data from ubyte file
 // Would return tensor pointer, with tensor size [number of labels][channel of label(number of types))]
 // for MNIST, would be [60000][10][1][1]
-func LoadLabelsFromFile(labelFile string) ([][]float32, error) {
+func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 	file, err := os.Open(labelFile)
 	if err != nil {
 		return nil, err
@@ -216,9 +223,9 @@ func LoadLabelsFromFile(labelFile string) ([][]float32, error) {
 	var numLabels uint32
 	binary.Read(reader, binary.BigEndian, &numLabels)
 
-	labelData := make([][]float32, numLabels)
+	labelData := make([][]float64, numLabels)
 	for i := range labelData {
-		labelData[i] = make([]float32, 10)
+		labelData[i] = make([]float64, 10)
 	}
 
 	for i := uint32(0); i < numLabels; i++ {
