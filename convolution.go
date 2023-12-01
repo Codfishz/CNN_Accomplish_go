@@ -9,7 +9,7 @@ package main
 
 import (
 	"math"
-	// "math/rand"
+	"math/rand"
 	//"fmt"
 )
 
@@ -44,7 +44,7 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	convLayer.Pad = pad
 	convLayer.Stride = stride
 
-	// scale := float64(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
+	scale := float64(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
 
 	// initialize "Kernel"
 	convLayer.Kernel = kernel
@@ -56,8 +56,8 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 			for iii := 0; iii < kernelShape[2]; iii++ {
 				//convLayer.Kernel[i][ii][iii] = make([]float64, kernelShape[3])
 				for iiii := 0; iiii < kernelShape[3]; iiii++ {
-					// convLayer.Kernel[i][ii][iii][iiii] = float32(rand.NormFloat64()) / scale
-					convLayer.Kernel[i][ii][iii][iiii] = float64(0.1)
+					convLayer.Kernel[i][ii][iii][iiii] = float64(rand.NormFloat64()) / scale
+					// convLayer.Kernel[i][ii][iii][iiii] = float64(0.1)
 				}
 			}
 		}
@@ -66,8 +66,8 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	// initialize "Bias"
 	convLayer.Bias = make([]float64, kernelShape[3])
 	for i := 0; i < len(convLayer.Bias); i++ {
-		// convLayer.Bias[i] = float64(rand.NormFloat64()) / scale
-		convLayer.Bias[i] = float64(0.1)
+		convLayer.Bias[i] = float64(rand.NormFloat64()) / scale
+		// convLayer.Bias[i] = float64(0.1)
 	}
 
 	// initialize "KGradient"

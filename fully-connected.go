@@ -1,8 +1,8 @@
 package main
 
 import (
-	// "math"
-	// "math/rand"
+	"math"
+	"math/rand"
 	// "fmt"
 	// "time"
 )
@@ -20,7 +20,7 @@ type Linear struct {
 
 // NewLinear creates a new Linear layer with the specified input and output sizes.
 func NewLinear(inChannel, outChannel int) *Linear {
-	// scale := math.Sqrt(float64(inChannel) / 2)
+	scale := math.Sqrt(float64(inChannel) / 2)
 
 	// Initialize the weights and biases with random values (gradients will be zero)
 	W := make([][]float64, inChannel)
@@ -29,16 +29,16 @@ func NewLinear(inChannel, outChannel int) *Linear {
 		W[i] = make([]float64, outChannel)
 		WGradient[i] = make([]float64, outChannel)
 		for j := range W[i] {
-			// W[i][j] = float64(rand.NormFloat64() / scale)
-			W[i][j] = float64(0.1)
+			W[i][j] = float64(rand.NormFloat64() / scale)
+			// W[i][j] = float64(0.1)
 		}
 	}
 
 	b := make([]float64, outChannel)
 	bGradient := make([]float64, outChannel)
 	for i := range b {
-		// b[i] = float64(rand.NormFloat64() / scale)
-		b[i] = float64(0.1)
+		b[i] = float64(rand.NormFloat64() / scale)
+		// b[i] = float64(0.1)
 		bGradient[i] = 0
 	}
 

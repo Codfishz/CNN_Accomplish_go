@@ -2,7 +2,7 @@ package main
 
 import (
 	"math"
-	//"fmt"
+	// "fmt"
 )
 
 // Pooling is a struct for a max pooling layer.
@@ -36,7 +36,7 @@ func (pool *Pooling) Forward(x [][][][]float64) [][][][]float64 {
 					maxVal := float64(math.Inf(-1)) // negative infinity
 					maxIndexI, maxIndexJ := 0, 0 // max value index
 
-					// go through all2 * 2 window and compute max value
+					// go through all 2 * 2 window and compute max value
 					for m := 0; m < 2; m++ {
 						for n := 0; n < 2; n++ {
 							val := x[bi][ci][i*2+m][j*2+n]
@@ -50,7 +50,7 @@ func (pool *Pooling) Forward(x [][][][]float64) [][][][]float64 {
 					// set the max value to feature map
 					feature.Data[bi][ci][i][j] = maxVal
 					// set the max value index to 1 in feature mask
-					pool.FeatureMask.Data[bi][ci][maxIndexI][maxIndexJ] = 1
+					pool.FeatureMask.Data[bi][ci][maxIndexI][maxIndexJ] = 1	
 
 				}
 			}

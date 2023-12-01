@@ -73,10 +73,10 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 
 	//softmax
 	numImages := len(trainImages.Data)
-	// for epoch := 0; epoch < num_epoch; epoch++ {
-	// 	for i := 0; i < numImages; i += batch_size {
-	for epoch := 0; epoch < 1; epoch++ {
-		for i := 0; i < 5; i ++ {
+	for epoch := 0; epoch < num_epoch; epoch++ {
+		for i := 0; i < numImages; i += batch_size {
+	// for epoch := 0; epoch < 1; epoch++ {
+	// 	for i := 0; i < 2; i ++ {
 			//get batch data
 			if i > numImages-batch_size {
 				continue
@@ -86,13 +86,13 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 
 			//forward pass
 			conv_1_output := conv_1.Forward(batchData)
-			fmt.Println("conv1:")
-			fmt.Println(conv_1_output[1][0][7][14])
-			fmt.Println("Kernel:")
-			fmt.Println(conv_1.Kernel)
-			fmt.Println("Bias:")
-			fmt.Println(conv_1.Bias)
-			fmt.Println("")
+			// fmt.Println("conv1:")
+			// fmt.Println(conv_1_output[1][0][7][14])
+			// fmt.Println("Kernel:")
+			// fmt.Println(conv_1.Kernel)
+			// fmt.Println("Bias:")
+			// fmt.Println(conv_1.Bias)
+			// fmt.Println("")
 			// fmt.Println(conv_1.Bias)
 			// fmt.Println(conv_1.Kernel)
 			// fmt.Println(len(batchData), len(batchData[0]), len(batchData[0][0]), len(batchData[0][0][0]))
@@ -132,12 +132,19 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 			relu_1.Backward(delta_4)
 			conv_1.Backward(delta_4, learning_rate)
 
-			learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
+			// fmt.Println("conv1:")
+			// // fmt.Println(conv_1_output[1][0][7][14])
+			// fmt.Println("Kernel:")
+			// fmt.Println(conv_2.Kernel)
+			// fmt.Println("Bias:")
+			// fmt.Println(conv_2.Bias)
+			// fmt.Println("")
+			
 			if i % 300 == 0 {
 				fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
 			}
 		}
-
+		learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
 	}
 	//return model parameters
 	m := Model{
