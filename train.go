@@ -32,7 +32,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//construct model
 	data := []int{5, 5, 1, 6}
 	kernel_1 := make([][][][]float64, data[0])
-	scale := float64(math.Sqrt(float64(3 * data[0] * data[1] * data[2] / data[3]))) // scaler
+	scale := float64(math.Sqrt(float64(float64(3 * data[0] * data[1] * data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_1[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
@@ -56,7 +56,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//conv2
 	data = []int{5, 5, 6, 16}
 	kernel_2 := make([][][][]float64, data[0])
-	scale = float64(math.Sqrt(float64(3 * data[0] * data[1] * data[2] / data[3]))) // scaler
+	scale = float64(math.Sqrt(float64(float64(3 * data[0] * data[1] * data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_2[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {

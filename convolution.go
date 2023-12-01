@@ -44,7 +44,7 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	convLayer.Pad = pad
 	convLayer.Stride = stride
 
-	scale := float64(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
+	scale := float64(math.Sqrt(float64(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2]) / float64(kernelShape[3])))) // scaler
 
 	// initialize "Kernel"
 	convLayer.Kernel = Copy4D(kernel)
