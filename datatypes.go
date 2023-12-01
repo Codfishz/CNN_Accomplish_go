@@ -49,6 +49,31 @@ func Copy4D(x [][][][]float64) [][][][]float64 {
     return new4D
 }
 
+// Copy2D slice
+func Copy2D(x [][]float64) [][]float64 {
+    new2D := make([][]float64, len(x))
+
+    for i := range x {
+        new2D[i] = make([]float64, len(x[i]))
+        for ii := range x[i] {
+            new2D[i][ii] = x[i][ii]
+        }
+    }
+
+    return new2D
+}
+
+// Copy1D slice
+func Copy1D(x []float64) []float64 {
+    new1D := make([]float64, len(x))
+
+    for i := range x {
+        new1D[i] = x[i]
+    }
+
+    return new1D
+}
+
 // Reshape a 4D tensor to a 2D tensor
 func Reshape4Dto2D(matrix4D [][][][]float64) [][]float64 {
     batchSize := len(matrix4D)
