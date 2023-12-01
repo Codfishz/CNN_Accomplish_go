@@ -15,7 +15,7 @@ type Pooling struct {
 
 // Forward takes the input data x and returns the output data after max pooling.
 // It performs forward max pooling on the input data
-func (pool *Pooling) Forward(x [][][][]float32) [][][][]float32 {
+func (pool *Pooling) Forward(x [][][][]float64) [][][][]float64 {
 	// b: batch size, c: channel, h: height, w: width
 	b, c, h, w := len(x), len(x[0]), len(x[0][0]), len(x[0][0][0])
 	// stride = 2
@@ -33,7 +33,7 @@ func (pool *Pooling) Forward(x [][][][]float32) [][][][]float32 {
 			for i := 0; i < featureH; i++ {
 				for j := 0; j < featureW; j++ {
 					// initialize max value and max value index
-					maxVal := float32(math.Inf(-1)) // negative infinity
+					maxVal := float64(math.Inf(-1)) // negative infinity
 					maxIndexI, maxIndexJ := 0, 0 // max value index
 
 					// go through all2 * 2 window and compute max value
@@ -62,7 +62,7 @@ func (pool *Pooling) Forward(x [][][][]float32) [][][][]float32 {
 
 // Backward takes the gradient from the next layer delta and returns the gradient for the previous layer dx.
 // delta: gradient from the next layer (b * c * featureH * featureW).
-func (pool *Pooling) Backward(delta [][][][]float32) [][][][]float32 {
+func (pool *Pooling) Backward(delta [][][][]float64) [][][][]float64 {
 	b, c, featureH, featureW := len(delta), len(delta[0]), len(delta[0][0]), len(delta[0][0][0])
 	h, w := len(pool.FeatureMask.Data[0][0]), len(pool.FeatureMask.Data[0][0][0])
 	dx := NewTensor(b, c, h, w)
@@ -110,7 +110,7 @@ func (pool *Pooling) Backward(delta [][][][]float32) [][][][]float32 {
 // 	pool := &Pooling{}
 
 // 	// Sample input data (batch size: 1, channels: 1, height: 4, width: 4)
-// 	input := [][][][]float32{
+// 	input := [][][][]float64{
 // 		{
 // 			{
 // 				{1, 2, 1, 4},
@@ -153,7 +153,7 @@ func (pool *Pooling) Backward(delta [][][][]float32) [][][][]float32 {
 // 		printData(pool.FeatureMask.Data[i][0])
 // 	}
 	
-// 	delta := [][][][]float32{
+// 	delta := [][][][]float64{
 // 		{
 // 			{
 // 				{1, 2},
@@ -190,7 +190,7 @@ func (pool *Pooling) Backward(delta [][][][]float32) [][][][]float32 {
 // }
 
 // // Function to print a 2D slice of data
-// func printData(data [][]float32) {
+// func printData(data [][]float64) {
 // 	for i := 0; i < len(data); i++ {
 // 		for j := 0; j < len(data[i]); j++ {
 // 			fmt.Printf("%.1f ", data[i][j])

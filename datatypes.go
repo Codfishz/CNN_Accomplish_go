@@ -2,27 +2,27 @@ package main
 
 type Tensor struct {
 	// batch size, channel, height, width
-	Data [][][][]float32
+	Data [][][][]float64
 }
 
 type Model struct {
-    kernel_1 [][][][]float32
-    kernel_2 [][][][]float32
-    bias_1 []float32
-    bias_2 []float32
-    weight [][]float32
-    bias []float32
+    kernel_1 [][][][]float64
+    kernel_2 [][][][]float64
+    bias_1 []float64
+    bias_2 []float64
+    weight [][]float64
+    bias []float64
 }
 
 // Initialize a tensor with all zeros
 func NewTensor(b, c, h, w int) *Tensor {
-	data := make([][][][]float32, b)
+	data := make([][][][]float64, b)
 	for i := 0; i < b; i++ {
-		data[i] = make([][][]float32, c)
+		data[i] = make([][][]float64, c)
 		for j := 0; j < c; j++ {
-			data[i][j] = make([][]float32, h)
+			data[i][j] = make([][]float64, h)
 			for k := 0; k < h; k++ {
-				data[i][j][k] = make([]float32, w)
+				data[i][j][k] = make([]float64, w)
 			}
 		}
 	}
@@ -30,15 +30,15 @@ func NewTensor(b, c, h, w int) *Tensor {
 }
 
 // CopyTensor
-func Copy4D(x [][][][]float32) [][][][]float32 {
-    new4D := make([][][][]float32, len(x))
+func Copy4D(x [][][][]float64) [][][][]float64 {
+    new4D := make([][][][]float64, len(x))
 
     for i := range x {
-        new4D[i] = make([][][]float32, len(x[i]))
+        new4D[i] = make([][][]float64, len(x[i]))
         for ii := range x[i] {
-            new4D[i][ii] = make([][]float32, len(x[i][ii]))
+            new4D[i][ii] = make([][]float64, len(x[i][ii]))
             for iii := range x[i][ii] {
-                new4D[i][ii][iii] = make([]float32, len(x[i][ii][iii]))
+                new4D[i][ii][iii] = make([]float64, len(x[i][ii][iii]))
                 for iiii := range x[i][ii][iii] {
                     new4D[i][ii][iii][iiii] = x[i][ii][iii][iiii]
                 }
@@ -50,7 +50,7 @@ func Copy4D(x [][][][]float32) [][][][]float32 {
 }
 
 // Reshape a 4D tensor to a 2D tensor
-func Reshape4Dto2D(matrix4D [][][][]float32) [][]float32 {
+func Reshape4Dto2D(matrix4D [][][][]float64) [][]float64 {
     batchSize := len(matrix4D)
     if batchSize == 0 {
         return nil
@@ -61,9 +61,9 @@ func Reshape4Dto2D(matrix4D [][][][]float32) [][]float32 {
     width := len(matrix4D[0][0][0])
     flatSize := channel * height * width
 
-    matrix2D := make([][]float32, batchSize)
+    matrix2D := make([][]float64, batchSize)
     for i := range matrix2D {
-        matrix2D[i] = make([]float32, flatSize)
+        matrix2D[i] = make([]float64, flatSize)
         flatIndex := 0
         for j := 0; j < channel; j++ {
             for k := 0; k < height; k++ {
@@ -79,18 +79,18 @@ func Reshape4Dto2D(matrix4D [][][][]float32) [][]float32 {
 }
 
 // Reshape a 2D tensor to a 4D tensor
-func Reshape2Dto4D(matrix2D [][]float32, batchSize, channel, height, width int) [][][][]float32 {
+func Reshape2Dto4D(matrix2D [][]float64, batchSize, channel, height, width int) [][][][]float64 {
     if len(matrix2D) == 0 || len(matrix2D[0]) != channel*height*width {
         return nil // or handle this case as per your needs
     }
 
-    matrix4D := make([][][][]float32, batchSize)
+    matrix4D := make([][][][]float64, batchSize)
     for i := range matrix4D {
-        matrix4D[i] = make([][][]float32, channel)
+        matrix4D[i] = make([][][]float64, channel)
         for j := range matrix4D[i] {
-            matrix4D[i][j] = make([][]float32, height)
+            matrix4D[i][j] = make([][]float64, height)
             for k := range matrix4D[i][j] {
-                matrix4D[i][j][k] = make([]float32, width)
+                matrix4D[i][j][k] = make([]float64, width)
                 for l := range matrix4D[i][j][k] {
                     flatIndex := j*height*width + k*width + l
                     matrix4D[i][j][k][l] = matrix2D[i][flatIndex]

@@ -6,7 +6,7 @@ type Relu struct {
 	FeatureMask *Tensor
 }
 
-func (relu *Relu) Forward(x [][][][]float32) {
+func (relu *Relu) Forward(x [][][][]float64) {
 	relu.FeatureMask = NewTensor(len(x), len(x[0]), len(x[0][0]), len(x[0][0][0]))
 
 	for i := 0; i < len(x); i++ {
@@ -24,7 +24,7 @@ func (relu *Relu) Forward(x [][][][]float32) {
 
 }
 
-func (relu *Relu) Backward(delta [][][][]float32) {
+func (relu *Relu) Backward(delta [][][][]float64) {
 	feature := relu.FeatureMask.Data
 	for i := 0; i < len(feature); i++ {
 		for ii := 0; ii < len(feature[0]); ii++ {

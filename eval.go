@@ -1,6 +1,6 @@
 package main
 
-func Eval(path string, batch_size int, m Model) float32 {
+func Eval(path string, batch_size int, m Model) float64 {
 	//load test image
 	k1 := m.kernel_1
 	k2 := m.kernel_2
@@ -78,12 +78,12 @@ func Eval(path string, batch_size int, m Model) float32 {
 			}
 		}
 	}
-	Accuracy := float32(correct) / float32(numImages)
+	Accuracy := float64(correct) / float64(numImages)
 	return Accuracy
 }
 
-func OneHot(predictedLabel [][]float32) []int {
-	var max float32
+func OneHot(predictedLabel [][]float64) []int {
+	var max float64
 	index := make([]int, len(predictedLabel))
 	for i := 0; i < len(predictedLabel); i++ {
 		for j := 0; j < len(predictedLabel[0]); j++ {

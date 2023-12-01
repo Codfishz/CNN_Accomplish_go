@@ -6,13 +6,13 @@ import (
 )
 
 
-func SoftmaxPredict(predict [][]float32) [][]float32 {
+func SoftmaxPredict(predict [][]float64) [][]float64 {
 	batchsize, classes := len(predict), len(predict[0])
-	softmax := make([][]float32, batchsize)
+	softmax := make([][]float64, batchsize)
 
 	for i := 0; i < batchsize; i++ {
 		//Initialize softmax object
-		predictTmp := make([]float32, classes)
+		predictTmp := make([]float64, classes)
 
 		// Find the maximum value in the array
 		maxValue := predict[i][0]
@@ -24,10 +24,10 @@ func SoftmaxPredict(predict [][]float32) [][]float32 {
 		// fmt.Println("maximum:", maxValue)
 
 		// Calculate the softmax values given the forward propagation.
-		sumExp := float32(0.0)
+		sumExp := float64(0.0)
 		for j := 0; j < classes; j++ {
 			//Calculating the maximum value to maintain numerical stability
-			predictTmp[j] = float32(math.Exp(float64(predict[i][j] - maxValue)))
+			predictTmp[j] = float64(math.Exp(float64(predict[i][j] - maxValue)))
 			sumExp += predictTmp[j]
 		}
 
@@ -41,7 +41,7 @@ func SoftmaxPredict(predict [][]float32) [][]float32 {
 	return softmax
 }
 
-func SoftmaxCalLoss(predict [][]float32, label [][]float32) (float32, [][]float32) {
+func SoftmaxCalLoss(predict [][]float64, label [][]float64) (float64, [][]float64) {
 	batchsize, classes := len(predict), len(predict[0])
 	// Calculate the softmax values
 
@@ -50,20 +50,20 @@ func SoftmaxCalLoss(predict [][]float32, label [][]float32) (float32, [][]float3
 	// fmt.Println(softmax[0])
 	// fmt.Println(softmax[1])
 	// fmt.Println(softmax[2])
-	loss := float32(0.0)
+	loss := float64(0.0)
 	//Initialize delta matrix
-	delta := make([][]float32, batchsize)
+	delta := make([][]float64, batchsize)
 
 	for i := 0; i < batchsize; i++ {
-		delta[i] = make([]float32, classes)
+		delta[i] = make([]float64, classes)
 		for j := 0; j < classes; j++ {
 			delta[i][j] = softmax[i][j] - label[i][j]
 			// fmt.Println("delta:", delta[i][j])
-			loss -= float32(math.Log(float64(softmax[i][j]))) * label[i][j]
-			// fmt.Println(float32(math.Log(float64(softmax[i][j]))))
+			loss -= float64(math.Log(float64(softmax[i][j]))) * label[i][j]
+			// fmt.Println(float64(math.Log(float64(softmax[i][j]))))
 		}
 	}
 	// fmt.Println("loss adds up:", loss)
-	loss /= float32(batchsize)
+	loss /= float64(batchsize)
 	return loss, delta
 }
