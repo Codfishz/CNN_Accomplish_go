@@ -12,6 +12,7 @@ import (
 	"encoding/binary"
 	"fmt"
 	"math"
+	"math/rand"
 	"os"
 )
 
@@ -31,12 +32,16 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//construct model
 	data := []int{5, 5, 1, 6}
 	kernel_1 := make([][][][]float64, data[0])
+	scale := float64(math.Sqrt(float64(3 * data[0] * data[1] * data[2] / data[3]))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_1[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
 			kernel_1[i][j] = make([][]float64, data[2])
 			for k := 0; k < data[2]; k++ {
 				kernel_1[i][j][k] = make([]float64, data[3])
+				for l := 0; l < data[3]; l++ {
+					kernel_1[i][j][k][l] = float64(rand.NormFloat64()) / scale
+				}
 			}
 		}
 	}
@@ -51,12 +56,16 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//conv2
 	data = []int{5, 5, 6, 16}
 	kernel_2 := make([][][][]float64, data[0])
+	scale = float64(math.Sqrt(float64(3 * data[0] * data[1] * data[2] / data[3]))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_2[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
 			kernel_2[i][j] = make([][]float64, data[2])
 			for k := 0; k < data[2]; k++ {
 				kernel_2[i][j][k] = make([]float64, data[3])
+				for l := 0; l < data[3]; l++ {
+					kernel_2[i][j][k][l] = float64(rand.NormFloat64()) / scale
+				}
 			}
 		}
 	}
@@ -73,8 +82,8 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 
 	//softmax
 	numImages := len(trainImages.Data)
-	for epoch := 0; epoch < num_epoch; epoch++ {
-		for i := 0; i < numImages; i += batch_size {
+	for epoch := 0; epoch < 3; epoch++ {
+		for i := 0; i < 6000; i += batch_size {
 	// for epoch := 0; epoch < 1; epoch++ {
 	// 	for i := 0; i < 2; i ++ {
 			//get batch data
@@ -117,10 +126,6 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output_reshaped)
 			loss, delta := SoftmaxCalLoss(linear_output, batchLabel)
-			// fmt.Println("weight:")
-			// fmt.Println(linear.W)
-			// fmt.Println("")
-			// fmt.Println(linear.b)
 			// fmt.Println(linear_output)
 			//calculate loss
 			delta = linear.Backward(delta, learning_rate)
@@ -146,6 +151,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 		}
 		learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
 	}
+
 	//return model parameters
 	m := Model{
 		kernel_1: conv_1.Kernel,

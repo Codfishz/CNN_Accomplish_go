@@ -1,5 +1,9 @@
 package main
 
+import (
+	// "fmt"
+)
+
 func Eval(path string, batch_size int, m Model) float64 {
 	//load test image
 	k1 := m.kernel_1
@@ -42,7 +46,6 @@ func Eval(path string, batch_size int, m Model) float64 {
 	linear := NewLinear(256, 10)
 	linear.W = w3
 	linear.b = b3
-	//softmax
 
 	//evaluation
 	correct := 0
@@ -58,8 +61,8 @@ func Eval(path string, batch_size int, m Model) float64 {
 
 		//forward pass
 		conv_1_output := conv_1.Forward(batchData)
+		relu_1.Forward(conv_1_output)
 		pool_1_output := pool_1.Forward(conv_1_output)
-		relu_1.Forward(pool_1_output)
 		conv_2_output := conv_2.Forward(pool_1_output)
 		relu_2.Forward(conv_2_output)
 		pool_2_output := pool_2.Forward(conv_2_output)
@@ -67,11 +70,16 @@ func Eval(path string, batch_size int, m Model) float64 {
 		linear_output := linear.Forward(pool_2_output_reshaped)
 
 		softmax_output := SoftmaxPredict(linear_output)
+		//fmt.Println(softmax_output)
 		index := OneHot(softmax_output)
 		// fmt.Println(batchData[0])
 		// fmt.Println(softmax_output.softmax)
+		//fmt.Println(batchLabel)
 		// fmt.Println(index)
-		// fmt.Println(batchLabel)
+		// fmt.Println(batchLabel[0])
+		// fmt.Println(batchLabel[1])
+		// fmt.Println(batchLabel[2])
+		//fmt.Println("")
 		for k := 0; k < batch_size; k++ {
 			if batchLabel[k][index[k]] == 1 {
 				correct += 1

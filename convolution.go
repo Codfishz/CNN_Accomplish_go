@@ -47,8 +47,8 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	scale := float64(math.Sqrt(float64(3 * kernelShape[0] * kernelShape[1] * kernelShape[2] / kernelShape[3]))) // scaler
 
 	// initialize "Kernel"
-	convLayer.Kernel = kernel
-
+	convLayer.Kernel = Copy4D(kernel)
+	/*
 	for i := 0; i < kernelShape[0]; i++ {
 		//convLayer.Kernel[i] = make([][][]float64, kernelShape[1])
 		for ii := 0; ii < kernelShape[1]; ii++ {
@@ -62,7 +62,7 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 			}
 		}
 	}
-
+	*/
 	// initialize "Bias"
 	convLayer.Bias = make([]float64, kernelShape[3])
 	for i := 0; i < len(convLayer.Bias); i++ {
