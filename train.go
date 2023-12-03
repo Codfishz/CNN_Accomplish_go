@@ -83,7 +83,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//softmax
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < 3; epoch++ {
-		for i := 0; i < 6000; i += batch_size {
+		for i := 0; i < 1200; i += batch_size {
 	// for epoch := 0; epoch < 1; epoch++ {
 	// 	for i := 0; i < 2; i ++ {
 			//get batch data

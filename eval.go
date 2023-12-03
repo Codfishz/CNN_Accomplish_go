@@ -27,6 +27,7 @@ func Eval(path string, batch_size int, m Model) float64 {
 	//conv1
 	conv_1 := InitializeConvolutionLayer(k1, 0, 1, batch_size)
 	conv_1.Bias = b1
+
 	//pool_1
 	var pool_1 Pooling
 
@@ -36,6 +37,7 @@ func Eval(path string, batch_size int, m Model) float64 {
 	//conv2
 	conv_2 := InitializeConvolutionLayer(k2, 0, 1, batch_size)
 	conv_2.Bias = b2
+
 	//relu_2
 	var relu_2 Relu
 
@@ -91,9 +93,9 @@ func Eval(path string, batch_size int, m Model) float64 {
 }
 
 func OneHot(predictedLabel [][]float64) []int {
-	var max float64
 	index := make([]int, len(predictedLabel))
 	for i := 0; i < len(predictedLabel); i++ {
+		var max float64
 		for j := 0; j < len(predictedLabel[0]); j++ {
 			if predictedLabel[i][j] > max {
 				index[i] = j
