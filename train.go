@@ -10,10 +10,12 @@ package main
 import (
 	"bufio"
 	"encoding/binary"
+	"encoding/csv"
 	"fmt"
 	"math"
 	"math/rand"
 	"os"
+	"strconv"
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
@@ -32,7 +34,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//construct model
 	data := []int{5, 5, 1, 6}
 	kernel_1 := make([][][][]float64, data[0])
-	scale := float64(math.Sqrt(float64(float64(3 * data[0] * data[1] * data[2]) / float64(data[3])))) // scaler
+	scale := float64(math.Sqrt(float64(float64(3*data[0]*data[1]*data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_1[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
@@ -56,7 +58,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//conv2
 	data = []int{5, 5, 6, 16}
 	kernel_2 := make([][][][]float64, data[0])
-	scale = float64(math.Sqrt(float64(float64(3 * data[0] * data[1] * data[2]) / float64(data[3])))) // scaler
+	scale = float64(math.Sqrt(float64(float64(3*data[0]*data[1]*data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
 		kernel_2[i] = make([][][]float64, data[1])
 		for j := 0; j < data[1]; j++ {
@@ -84,8 +86,8 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < 3; epoch++ {
 		for i := 0; i < 1200; i += batch_size {
-	// for epoch := 0; epoch < 1; epoch++ {
-	// 	for i := 0; i < 2; i ++ {
+			// for epoch := 0; epoch < 1; epoch++ {
+			// 	for i := 0; i < 2; i ++ {
 			//get batch data
 			if i > numImages-batch_size {
 				continue
@@ -144,8 +146,8 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 			// fmt.Println("Bias:")
 			// fmt.Println(conv_2.Bias)
 			// fmt.Println("")
-			
-			if i % 300 == 0 {
+
+			if i%300 == 0 {
 				fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
 			}
 		}
@@ -250,6 +252,85 @@ func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 				labelData[i][j] = 1
 			} else {
 				labelData[i][j] = 0
+			}
+		}
+	}
+
+	return labelData, nil
+}
+
+// LoadImageCSV reads flattened pixel values from a CSV file and returns a 4D tensor.
+// The tensor size is [number of images][channel of image][image height][image width].
+func LoadImageCSV(imageFile string) (*Tensor, error) {
+	file, err := os.Open(imageFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	numImages := len(records)
+	numPixels := len(records[0])
+	numRows := math.Sqrt(float64(numPixels))
+	numCols := numRows
+
+	imageData := make([][][][]float64, numImages)
+	for i := 0; i < numImages; i++ {
+		imageData[i] = make([][][]float64, 1)
+		imageData[i][0] = make([][]float64, int(numRows))
+
+		for r := 0; r < int(numRows); r++ {
+			imageData[i][0][r] = make([]float64, int(numCols))
+			for c := 0; c < int(numCols); c++ {
+				pixelValue, err := strconv.ParseFloat(records[i][r*int(numCols)+c], 64)
+				if err != nil {
+					return nil, err
+				}
+				imageData[i][0][r][c] = pixelValue
+			}
+		}
+	}
+
+	return &Tensor{Data: imageData}, nil
+}
+
+// LoadLabelCSV reads one-hot encoded labels from a CSV file and returns a 2D tensor.
+// The tensor size is [number of labels][number of classes].
+func LoadLabelCSV(labelFile string) ([][]float64, error) {
+	file, err := os.Open(labelFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	numLabels := len(records)
+
+	labelData := make([][]float64, numLabels)
+	for i := range labelData {
+		labelData[i] = make([]float64, 2)
+
+		for _, val := range records[i] {
+			labelVal, err := strconv.Atoi(val)
+			if err != nil {
+				return nil, err
+			}
+			if labelVal == 0 {
+				labelData[i][0] = 1
+				labelData[i][1] = 0
+			} else {
+				labelData[i][0] = 0
+				labelData[i][1] = 1
 			}
 		}
 	}
