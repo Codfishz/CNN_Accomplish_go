@@ -12,6 +12,7 @@ func main() {
 	learning_rate := float64(0.01)
 	batch_size := 3
 	num_epoch := 3
+	
 	path := "MINST"
 
 	m := Train(path, learning_rate, num_epoch, batch_size)
@@ -24,9 +25,21 @@ func main() {
 	fmt.Println("Start evaluation process")
 	Accuracy := Eval(path, batch_size, *m)
 	fmt.Println("Accuracy is ", Accuracy)
-
 	fmt.Println("End training process")
 	
+
+	// Training our second model!
+	pathBrainTumor := "Brain_tumor_modified"
+	fmt.Println("Start brain tumor model training process, pending...")
+	mBrainTumor := TrainBrainTumor(pathBrainTumor, learning_rate, num_epoch, batch_size)
+	fmt.Println("End brain tumor model training")
+
+	// Evaluation of our second model!
+	fmt.Println("Start brain tumor model evaluation process, pendig...")
+	AccuracyBrainTumor := EvaluateBrainTumor(pathBrainTumor, batch_size, *mBrainTumor)
+	fmt.Println("Accuracy of the Brain Tumor CNN is:", AccuracyBrainTumor)
+	fmt.Println("End brain tumor model training process")
+
 	/*
 	fmt.Println("forward test starts here")
 	// define a new tensor to feed our CNN
