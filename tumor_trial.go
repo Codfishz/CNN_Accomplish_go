@@ -6,13 +6,15 @@
 // It has a function created to initialize a "Convolution" struct, which is a single convolution layer
 // This script was developed by Dunhan Jiang
 
-
 package main
 
 import (
+	"encoding/csv"
 	"fmt"
 	"math"
 	"math/rand"
+	"os"
+	"strconv"
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
@@ -21,9 +23,9 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 	if err != nil {
 		panic("Load brain tumor dataset training image fail!")
 	}
-	fmt.Println("Brain Tumor Training Data Set Loaded:", 
-				len(trainImages.Data), len(trainImages.Data[0]), len(trainImages.Data[0][0]), len(trainImages.Data[0][0][0]))
-	
+	fmt.Println("Brain Tumor Training Data Set Loaded:",
+		len(trainImages.Data), len(trainImages.Data[0]), len(trainImages.Data[0][0]), len(trainImages.Data[0][0][0]))
+
 	trainLabels, err := LoadLabelCSV(path + "/y_train.csv")
 	if err != nil {
 		panic("Load brain tumor dataset training label fail!")
@@ -100,15 +102,38 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output_reshaped)
 			// fmt.Println(linear_output)
-			
+
 			loss, delta := SoftmaxCalLoss(linear_output, batchLabel)
 			//calculate loss
 			delta = linear.Backward(delta, learning_rate)
+			// fmt.Println("delta")
+			// fmt.Println(len(delta))
+			// fmt.Println(len(delta[0]))
 			delta_1 := Reshape2Dto4D(delta, batch_size, 4, 10, 10)
+			// fmt.Println("delta_1")
+			// fmt.Println(len(delta_1))
+			// fmt.Println(len(delta_1[0]))
+			// fmt.Println(len(delta_1[0][0]))
+			// fmt.Println(len(delta_1[0][0][0]))
 			delta_2 := pool_2.Backward(delta_1)
 			relu_2.Backward(delta_2)
+			// fmt.Println("delta_2")
+			// fmt.Println(len(delta_2))
+			// fmt.Println(len(delta_2[0]))
+			// fmt.Println(len(delta_2[0][0]))
+			// fmt.Println(len(delta_2[0][0][0]))
 			delta_3 := conv_2.Backward(delta_2, learning_rate)
+			// fmt.Println("delta_3")
+			// fmt.Println(len(delta_3))
+			// fmt.Println(len(delta_3[0]))
+			// fmt.Println(len(delta_3[0][0]))
+			// fmt.Println(len(delta_3[0][0][0]))
 			delta_4 := pool_1.Backward(delta_3)
+			// fmt.Println("delta_4")
+			// fmt.Println(len(delta_4))
+			// fmt.Println(len(delta_4[0]))
+			// fmt.Println(len(delta_4[0][0]))
+			// fmt.Println(len(delta_4[0][0][0]))
 			relu_1.Backward(delta_4)
 			conv_1.Backward(delta_4, learning_rate)
 			if i%30 == 0 {
@@ -127,10 +152,8 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 		weight:   linear.W,
 		bias:     linear.b,
 	}
-	return &m	
+	return &m
 }
-
-
 
 func EvaluateBrainTumor(path string, batch_size int, m Model) float64 {
 	//load test image
@@ -209,4 +232,81 @@ func EvaluateBrainTumor(path string, batch_size int, m Model) float64 {
 	}
 	Accuracy := float64(correct) / float64(numImages)
 	return Accuracy
+}
+
+// LoadImageCSV reads flattened pixel values from a CSV file and returns a 4D tensor.
+// The tensor size is [number of images][channel of image][image height][image width].
+func LoadImageCSV(imageFile string) (*Tensor, error) {
+	file, err := os.Open(imageFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	numImages := len(records)
+	numPixels := len(records[0])
+	numRows := math.Sqrt(float64(numPixels))
+	numCols := numRows
+
+	imageData := make([][][][]float64, numImages)
+	for i := 0; i < numImages; i++ {
+		imageData[i] = make([][][]float64, 1)
+		imageData[i][0] = make([][]float64, int(numRows))
+
+		for r := 0; r < int(numRows); r++ {
+			imageData[i][0][r] = make([]float64, int(numCols))
+			for c := 0; c < int(numCols); c++ {
+				pixelValue, err := strconv.ParseFloat(records[i][r*int(numCols)+c], 64)
+				if err != nil {
+					return nil, err
+				}
+				imageData[i][0][r][c] = pixelValue
+			}
+		}
+	}
+
+	return &Tensor{Data: imageData}, nil
+}
+
+// LoadLabelCSV reads one-hot encoded labels from a CSV file and returns a 2D tensor.
+// The tensor size is [number of labels][number of classes].
+func LoadLabelCSV(labelFile string) ([][]float64, error) {
+	file, err := os.Open(labelFile)
+	if err != nil {
+		return nil, err
+	}
+	defer file.Close()
+
+	reader := csv.NewReader(file)
+	records, err := reader.ReadAll()
+	if err != nil {
+		return nil, err
+	}
+
+	numLabels := len(records[0])
+	fmt.Println(numLabels)
+	labelData := make([][]float64, numLabels)
+	for i := 0; i < numLabels; i++ {
+		labelData[i] = make([]float64, 2)
+
+		labelVal, err := strconv.Atoi(records[0][i])
+		if err != nil {
+			return nil, err
+		}
+		if labelVal == 0 {
+			labelData[i][0] = 1
+			labelData[i][1] = 0
+		} else {
+			labelData[i][0] = 0
+			labelData[i][1] = 1
+		}
+	}
+
+	return labelData, nil
 }

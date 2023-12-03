@@ -10,12 +10,10 @@ package main
 import (
 	"bufio"
 	"encoding/binary"
-	"encoding/csv"
 	"fmt"
 	"math"
 	"math/rand"
 	"os"
-	"strconv"
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
@@ -252,85 +250,6 @@ func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 				labelData[i][j] = 1
 			} else {
 				labelData[i][j] = 0
-			}
-		}
-	}
-
-	return labelData, nil
-}
-
-// LoadImageCSV reads flattened pixel values from a CSV file and returns a 4D tensor.
-// The tensor size is [number of images][channel of image][image height][image width].
-func LoadImageCSV(imageFile string) (*Tensor, error) {
-	file, err := os.Open(imageFile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	numImages := len(records)
-	numPixels := len(records[0])
-	numRows := math.Sqrt(float64(numPixels))
-	numCols := numRows
-
-	imageData := make([][][][]float64, numImages)
-	for i := 0; i < numImages; i++ {
-		imageData[i] = make([][][]float64, 1)
-		imageData[i][0] = make([][]float64, int(numRows))
-
-		for r := 0; r < int(numRows); r++ {
-			imageData[i][0][r] = make([]float64, int(numCols))
-			for c := 0; c < int(numCols); c++ {
-				pixelValue, err := strconv.ParseFloat(records[i][r*int(numCols)+c], 64)
-				if err != nil {
-					return nil, err
-				}
-				imageData[i][0][r][c] = pixelValue
-			}
-		}
-	}
-
-	return &Tensor{Data: imageData}, nil
-}
-
-// LoadLabelCSV reads one-hot encoded labels from a CSV file and returns a 2D tensor.
-// The tensor size is [number of labels][number of classes].
-func LoadLabelCSV(labelFile string) ([][]float64, error) {
-	file, err := os.Open(labelFile)
-	if err != nil {
-		return nil, err
-	}
-	defer file.Close()
-
-	reader := csv.NewReader(file)
-	records, err := reader.ReadAll()
-	if err != nil {
-		return nil, err
-	}
-
-	numLabels := len(records)
-
-	labelData := make([][]float64, numLabels)
-	for i := range labelData {
-		labelData[i] = make([]float64, 2)
-
-		for _, val := range records[i] {
-			labelVal, err := strconv.Atoi(val)
-			if err != nil {
-				return nil, err
-			}
-			if labelVal == 0 {
-				labelData[i][0] = 1
-				labelData[i][1] = 0
-			} else {
-				labelData[i][0] = 0
-				labelData[i][1] = 1
 			}
 		}
 	}
