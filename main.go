@@ -13,19 +13,19 @@ func main() {
 	batch_size := 3
 	num_epoch := 3
 
-	path := "MINST"
+	// path := "MINST"
 
-	m := Train(path, learning_rate, num_epoch, batch_size)
-	// Train(path, learning_rate, num_epoch, batch_size)
+	// m := Train(path, learning_rate, num_epoch, batch_size)
+	// // Train(path, learning_rate, num_epoch, batch_size)
 
-	//finish training
-	fmt.Println("End training process")
+	// //finish training
+	// fmt.Println("End training process")
 
-	//evaluation process
-	fmt.Println("Start evaluation process")
-	Accuracy := Eval(path, batch_size, *m)
-	fmt.Println("Accuracy is ", Accuracy)
-	fmt.Println("End training process")
+	// //evaluation process
+	// fmt.Println("Start evaluation process")
+	// Accuracy := Eval(path, batch_size, *m)
+	// fmt.Println("Accuracy is ", Accuracy)
+	// fmt.Println("End training process")
 
 	// Training our second model!
 	pathBrainTumor := "Brain_tumor_modified"
