@@ -2,9 +2,8 @@
 // Final Project: Construct Convolutional Neural Network From Scratch Using GOlang
 // This script both training and testing function to both train and evaluate
 // our simple CNN modle's performance on the "Brain Tuor modified" data set
-// It's helper function of reading from input can be found in the "train.go" file
 // It has a function created to initialize a "Convolution" struct, which is a single convolution layer
-// This script was developed by Dunhan Jiang
+// This script was developed by Dunhan Jiang (Train & Test) and Zirui Chen (LoadImage & LoadLabel)
 
 package main
 
@@ -33,7 +32,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 	fmt.Println("Brain Tumor Training Data Set Label Loaded:", len(trainLabels), len(trainLabels[0]))
 
 	//construct model
-	data := []int{20, 20, 1, 2}
+	data := []int{33, 33, 1, 3}
 	kernel_1 := make([][][][]float64, data[0])
 	scale := float64(math.Sqrt(float64(float64(3*data[0]*data[1]*data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
@@ -48,7 +47,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 			}
 		}
 	}
-	conv_1 := InitializeConvolutionLayer(kernel_1, 0, 4, batch_size)
+	conv_1 := InitializeConvolutionLayer(kernel_1, 0, 1, batch_size)
 
 	//pool_1
 	var pool_1 Pooling
@@ -57,7 +56,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 	var relu_1 Relu
 
 	//conv2
-	data = []int{7, 7, 2, 4}
+	data = []int{15, 15, 3, 6}
 	kernel_2 := make([][][][]float64, data[0])
 	scale = float64(math.Sqrt(float64(float64(3*data[0]*data[1]*data[2]) / float64(data[3])))) // scaler
 	for i := 0; i < data[0]; i++ {
@@ -81,7 +80,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 	var pool_2 Pooling
 
 	//linear layer
-	linear := NewLinear(400, 2)
+	linear := NewLinear(41*41*6, 2)
 
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < 3; epoch++ {
@@ -93,12 +92,12 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 			batchLabel := trainLabels[i : i+batch_size]
 
 			//forward pass
-			conv_1_output := conv_1.Forward(batchData) // 52 by 52 by 2
+			conv_1_output := conv_1.Forward(batchData) // 192 by 192 by 3
 			relu_1.Forward(conv_1_output)
-			pool_1_output := pool_1.Forward(conv_1_output) // 26 by 26 by 2
-			conv_2_output := conv_2.Forward(pool_1_output) // 20 by 20 by 4
+			pool_1_output := pool_1.Forward(conv_1_output) // 96 by 96 by 3
+			conv_2_output := conv_2.Forward(pool_1_output) // 82 by 82 by 6
 			relu_2.Forward(conv_2_output)
-			pool_2_output := pool_2.Forward(conv_2_output) // 10 by 10 by 4
+			pool_2_output := pool_2.Forward(conv_2_output) // 41 by 41 by 6
 			pool_2_output_reshaped := Reshape4Dto2D(pool_2_output)
 			linear_output := linear.Forward(pool_2_output_reshaped)
 			// fmt.Println(linear_output)
@@ -109,7 +108,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 			// fmt.Println("delta")
 			// fmt.Println(len(delta))
 			// fmt.Println(len(delta[0]))
-			delta_1 := Reshape2Dto4D(delta, batch_size, 4, 10, 10)
+			delta_1 := Reshape2Dto4D(delta, batch_size, 6, 41, 41)
 			// fmt.Println("delta_1")
 			// fmt.Println(len(delta_1))
 			// fmt.Println(len(delta_1[0]))
@@ -176,7 +175,7 @@ func EvaluateBrainTumor(path string, batch_size int, m Model) float64 {
 
 	//construct model
 	//conv1
-	conv_1 := InitializeConvolutionLayer(k1, 0, 4, batch_size)
+	conv_1 := InitializeConvolutionLayer(k1, 0, 1, batch_size)
 	conv_1.Bias = b1
 
 	//pool_1
@@ -196,7 +195,7 @@ func EvaluateBrainTumor(path string, batch_size int, m Model) float64 {
 	var pool_2 Pooling
 
 	//linear layer
-	linear := NewLinear(400, 2)
+	linear := NewLinear(41*41*6, 2)
 	linear.W = w3
 	linear.b = b3
 
