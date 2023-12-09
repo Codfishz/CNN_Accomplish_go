@@ -14,10 +14,14 @@ import (
 	"math"
 	"math/rand"
 	"os"
+	// "strconv"
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
-func Train(path string, learning_rate float64, num_epoch int, batch_size int) *Model {
+func Train(path string, learning_rate float64, num_epoch int, batch_size int) (*Model, []float64, []float64, int) {
+
+	// every step images, print loss and accuracy
+	step := 3000
 
 	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte/train-images-idx3-ubyte")
 	if err != nil {
@@ -80,10 +84,14 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 	//linear layer
 	linear := NewLinear(256, 10)
 
-	//softmax
+	// store loss and accuracy
+	lossArr := make([]float64, 0)
+	accuracyArr := make([]float64, 0)
+
+	// training process
 	numImages := len(trainImages.Data)
-	for epoch := 0; epoch < 3; epoch++ {
-		for i := 0; i < 1200; i += batch_size {
+	for epoch := 0; epoch < 2; epoch++ {
+		for i := 0; i < numImages; i += batch_size {
 			// for epoch := 0; epoch < 1; epoch++ {
 			// 	for i := 0; i < 2; i ++ {
 			//get batch data
@@ -145,8 +153,20 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 			// fmt.Println(conv_2.Bias)
 			// fmt.Println("")
 
-			if i%300 == 0 {
+			if i%step == 0 {
 				fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
+				lossArr = append(lossArr, loss)
+			}
+			if i%step == 0 {
+				tempModel := Model{
+					kernel_1: conv_1.Kernel,
+					kernel_2: conv_2.Kernel,
+					bias_1:   conv_1.Bias,
+					bias_2:   conv_2.Bias,
+					weight:   linear.W,
+					bias:     linear.b,
+				}
+				accuracyArr = append(accuracyArr, Eval(path, batch_size, tempModel))
 			}
 		}
 		learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
@@ -161,7 +181,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 		weight:   linear.W,
 		bias:     linear.b,
 	}
-	return &m
+	return &m, lossArr, accuracyArr, step
 }
 
 // load training image data from ubyte file
@@ -170,7 +190,6 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) *M
 func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 
 	//check whether the path for image file is correct
-	//
 	file, err := os.Open(imageFile)
 	if err != nil {
 		return nil, err
@@ -255,4 +274,41 @@ func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 	}
 
 	return labelData, nil
+}
+
+
+func Store2DArray(filename string, arr []float64, step int)  {
+	Array2D := make([][]float64, len(arr))
+
+	// for each row, first column is step, second column is loss or accuracy
+	for i := 0; i < len(arr); i++ {
+		Array2D[i] = make([]float64, 2)
+		for j := 0; j < 2; j++ {
+			if j == 0 {
+				Array2D[i][j] = float64(step * i)
+			} else {
+				Array2D[i][j] = arr[i]
+			}
+		}
+	}
+
+	file, err := os.Create(filename + ".txt")
+    if err != nil {
+        panic(err)
+    }
+    defer file.Close()
+
+    // Write the 2D array to the file
+    for _, row := range Array2D {
+        for _, col := range row {
+            _, err := fmt.Fprintf(file, "%f\t", col)
+            if err != nil {
+                panic(err)
+            }
+        }
+        _, err := fmt.Fprintln(file)
+        if err != nil {
+            panic(err)
+        }
+    }
 }

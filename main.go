@@ -18,10 +18,18 @@ func main() {
 
 	path := "MINST"
 
-	m := Train(path, learning_rate, num_epoch, batch_size)
+	m, lossArr, accuracyArr, step := Train(path, learning_rate, num_epoch, batch_size)
 
 	//finish training
 	fmt.Println("End training process")
+
+	// store lossArr and accuracyArr
+	fmt.Println("Store lossArr and accuracyArr")
+	Store2DArray("lossArr", lossArr, step)
+	Store2DArray("accuracyArr", accuracyArr, step)
+	fmt.Println("Store lossArr and accuracyArr done")
+
+	
 
 	//evaluation process
 	fmt.Println("Start evaluation process to recognize the MNIST data set, pending...")
