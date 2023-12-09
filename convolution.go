@@ -30,6 +30,7 @@ type Convolution struct {
 
 
 
+
 // This InitializeConvolutionLayer function build a Convolution struct as one layer
 // This function takes as input one slice of ints as the intended kernel's shape,
 // plus three int parameters for Pad and Stride fields, as well as a number of all Images (the batch size)
@@ -82,6 +83,7 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	pointer := &convLayer
 	return pointer
 }
+
 
 
 
@@ -145,7 +147,7 @@ func (convL *Convolution) Forward(x [][][][]float64) [][][][]float64 {
 		// (image .* kernel) has shape:  (feature_h * feature_w) by (nk)
 
 		feature[b] = make([][][]float64, nk)
-		// ? the second outmost loop2: iterate through every signle row of many image patches //////
+		// the second outmost loop2: iterate through every signle row of many image patches //////
 		for i := 0; i < nk; i++ {
 			feature[b][i] = make([][]float64, feature_h)
 			// the third outmost loop3: iterate through every signle image patch at a specific ith row /////
@@ -177,7 +179,9 @@ func (convL *Convolution) Forward(x [][][][]float64) [][][][]float64 {
 	}
 
 	return feature
+
 }
+
 
 
 
@@ -220,7 +224,9 @@ func PadLayer(data [][][][]float64, pad int) [][][][]float64 {
 	}
 
 	return dataNew
+
 }
+
 
 
 
@@ -260,7 +266,9 @@ func ImageToColumn(image [][][]float64, feature_h, feature_w, ck, hk, wk, stride
 	}
 
 	return imagePatches
+
 }
+
 
 
 
@@ -278,23 +286,92 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 	cx := len(convL.Data[0])       // number of channels
 	hx := len(convL.Data[0][0])    // height
 	wx := len(convL.Data[0][0][0]) // width
-
 	// obtain the shape of the kernel
 	hk := len(convL.Kernel)          // height
 	wk := len(convL.Kernel[0])       // width
 	ck := len(convL.Kernel[0][0])    // number of channels
 	nk := len(convL.Kernel[0][0][0]) // number of kernels
-
 	// obtain the shape of the delta
 	bd := len(delta)          // number of image
 	cd := len(delta[0])       // number of outChannels
 	hd := len(delta[0][0])    // height
 	wd := len(delta[0][0][0]) // width
 
-	////////////////////////////// Module 1: Compute kernel & bias gradients
 
-	// Then compute the weight of Kernel Gradient
-	// This nested loop compute the gradient of kernel weights
+	////////////////////////////// Module 1: Compute kernel & bias gradients
+	// compute the weight of Kernel Gradient
+	// This function below of a nested loop compute the gradient of kernel weights and stores new KGradient locally 
+	ComputeKernelGradient(bx, bd, hd, wd, cd, hk, wk, ck, convL.ImageCol, delta, convL.KGradient)
+	// Also compute the Bias Gradient
+	// This function below of a nested loop compute the gradient of kernel biases, with updates for bias field
+	ComputeBiasGradient(bx, cd, bd, hd, wd, delta, convL.BGradient)
+
+
+	////////////////////////////// Module 2: Compute deltaBackward for output for the "next" shadower layer
+	// Initialize a tensor for output as the "delta" after current convolution layer's back propagation
+	deltaBackward := make([][][][]float64, bx)
+	for i := 0; i < bx; i++ {
+		deltaBackward[i] = make([][][]float64, cx)
+		for ii := 0; ii < cx; ii++ {
+			deltaBackward[i][ii] = make([][]float64, hx)
+			for iii := 0; iii < hx; iii++ {
+				deltaBackward[i][ii][iii] = make([]float64, wx)
+			}
+		}
+	}
+	// perform any padding if necessary
+	var deltaPad [][][][]float64
+	if hd-hk+1 != hx {
+		pad := (hx - hd + hk - 1) / 2 // integer division
+		//fmt.Println(len(delta), len(delta[0]), len(delta[0][0]), len(delta[0][0][0]))
+		//fmt.Println("# pad:", pad)
+		deltaPad = PadLayer(delta, pad) // a subrotine is neseccary to pad the convL.Data into a favored size
+	} else {
+		deltaPad = delta
+	}
+	// Notice that after potential padding, the "deltaPad" slice should have the same shape as "convL.Data"
+	// Finally, calculate the value for "deltaBackward" for output
+	ComputeDeltaBackward(bx, hx, wx, cx, hk, wk, nk, cd, deltaPad, deltaBackward, convL.Kernel)
+
+
+	////////////////////////////// Module 3: Back Propagation
+	// Back Propagation: Where kernel and bias would be updated
+	// The following nested loop update the kernel according to both the kernel gradient and the learning rate
+	// the outmost loop1: iterate through all rows of the kernel ////
+	for i := 0; i < hk; i++ {
+		// the second outmost loop2: iterate through all columns of the kernel ///
+		for ii := 0; ii < wk; ii++ {
+			// the third outmost loop3: iterate through all channels of this pixel //
+			for iii := 0; iii < ck; iii++ {
+				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
+				for iiii := 0; iiii < nk; iiii++ {
+					convL.Kernel[i][ii][iii][iiii] -= convL.KGradient[i][ii][iii][iiii] * lRate
+				}
+			}
+		}
+	}
+	// This one last loop update the biases
+	for i := 0; i < nk; i++ {
+		// update the bias according to both the bias gradient and the learning rate
+		convL.Bias[i] -= convL.BGradient[i] * lRate
+	}
+
+
+	////////////////////////////// Module 4: Return AT LAST
+	return deltaBackward
+
+}
+
+
+
+
+// This ComputeKernelGradient function is defined for a Conv.KGradient object
+// It computes the kernel gradient and stores locally at the given layer
+// Inputs: bx, bd, hd, wd, cd, hk, wk, ck int (dimensionality parameters)
+// Inputs: convL.ImageCol (stored image patches), delta (back propagrated delta), convL.KGradient (local pointer)
+// This method returns nothing
+func ComputeKernelGradient(bx, bd, hd, wd, cd, hk, wk, ck int, imageCol, delta, kGradient [][][][]float64) {
+
 	bxfloat64 := float64(bx)
 	// the outmost loop1: iterate through every signle image inside the entire batch ///////
 	for b := 0; b < bd; b++ {
@@ -311,7 +388,7 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 						for w := 0; w < wk; w++ {
 							// the most inner loop7: iterate through all inChannels (number of image channels) /
 							for c := 0; c < ck; c++ {
-								convL.KGradient[h][w][c][iii] += convL.ImageCol[b][i][ii][position] * delta[b][iii][i][ii]
+								kGradient[h][w][c][iii] += imageCol[b][i][ii][position] * delta[b][iii][i][ii]
 								position ++
 							}
 						}
@@ -327,14 +404,28 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 			// the most inner loop7: iterate through all inChannels (number of image channels) /
 			for c := 0; c < ck; c++ {
 				for iii := 0; iii < cd; iii++ {
-					convL.KGradient[h][w][c][iii] /= bxfloat64
+					kGradient[h][w][c][iii] /= bxfloat64
 				}
 			}
 		}
 	}
 
-	// Also compute the Bias Gradient
-	// This nested loop compute the gradient of kernel biases, with updates for bias field
+	// This function has no return
+	// All computations make local upgrade to convL.KGradient locally
+}
+
+
+
+
+// This ComputeBiasGradient function is defined for a Conv.BGradient object
+// It computes the bias gradient and stores locally at the given layer
+// Inputs: bx, cd, bd, hd, wd int (dimensionality parameters)
+// Inputs: delta (back propagrated delta), convL.BGradient (local pointer)
+// This method returns nothing
+func ComputeBiasGradient(bx, cd, bd, hd, wd int, delta [][][][]float64, bGradient []float64) {
+
+	bxfloat64 := float64(bx)
+
 	// the outmost loop1: iterate through every outChannel (equivalently, nk = cd) ////
 	for i := 0; i < cd; i++ {
 		sumConc := float64(0)
@@ -349,42 +440,31 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 				}
 			}
 		}
-		convL.BGradient[i] += sumConc
-		convL.BGradient[i] /= bxfloat64
+
+		bGradient[i] += sumConc
+		bGradient[i] /= bxfloat64
 	}
 
-	////////////////////////////// Module 2: Compute deltaBackward for output for the "next" shadower layer
-	// Initialize a tensor for output as the "delta" after current convolution layer's back propagation
-	deltaBackward := make([][][][]float64, bx)
-	for i := 0; i < bx; i++ {
-		deltaBackward[i] = make([][][]float64, cx)
-		for ii := 0; ii < cx; ii++ {
-			deltaBackward[i][ii] = make([][]float64, hx)
-			for iii := 0; iii < hx; iii++ {
-				deltaBackward[i][ii][iii] = make([]float64, wx)
-			}
-		}
-	}
+	// This function has no return
+	// All computations make local upgrade to convL.BGradient locally
+}
 
-	// perform any padding if necessary
-	var deltaPad [][][][]float64
-	if hd-hk+1 != hx {
-		pad := (hx - hd + hk - 1) / 2 // integer division
-		//fmt.Println(len(delta), len(delta[0]), len(delta[0][0]), len(delta[0][0][0]))
-		//fmt.Println("# pad:", pad)
-		deltaPad = PadLayer(delta, pad) // a subrotine is neseccary to pad the convL.Data into a favored size
-	} else {
-		deltaPad = delta
-	}
 
-	// Notice that after potential padding, the "deltaPad" slice should have the same shape as "convL.Data"
 
-	// Finally, calculate the value for "deltaBackward" for output
-	// the outmost loop1: iterate through every signle image inside the entire batch ///////
+
+// This ComputeDeltaBackward function is defined for a deltaBackward object
+// It computes the deltaBackward for back propagation to the next layer and stores locally in the tensor
+// Inputs: bx, hx, wx, cx, hk, wk, nk int (dimensionality parameters)
+// Inputs: deltaPad (back propagrated delta)
+// This method returns nothing
+func ComputeDeltaBackward(bx, hx, wx, cx, hk, wk, nk, cd int, deltaPad, deltaBackward, kernel [][][][]float64) {
 	//fmt.Println("afterPad:", len(deltaPad), len(deltaPad[0]), len(deltaPad[0][0]), len(deltaPad[0][0][0]))
+
+	// the outmost loop1: iterate through every signle image inside the entire batch ///////
 	for b := 0; b < bx; b++ {
 		//fmt.Println(hx, wx, cd, wk, hk, convL.Stride)
-		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, convL.Stride) // hx=wx=12
+		stride := 1
+		image := ImageToColumn(deltaPad[b], hx, wx, cd, wk, hk, stride) // hx=wx=12
 		// fmt.Println(b, "th image2col:")
 		// fmt.Println(image)
 		// image has shape: hx by wx by (wk * hk * nk)
@@ -409,7 +489,7 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 							// the seventh outmost loop7: iterate through every signle kernel (nk) /
 							for n := 0; n < nk; n++ {
 								// kernelSum += convL.Kernel[h][w][c][n] * image[i][ii][h*hk+w+n] // this n is the key
-								kernelSum += convL.Kernel[hk-h-1][wk-w-1][c][n] * image[i][ii][position] // this n is the key
+								kernelSum += kernel[hk-h-1][wk-w-1][c][n] * image[i][ii][position] // this n is the key
 								position += 1
 								// fmt.Println(convL.Kernel[hk-h-1][wk-w-1][c][n], image[i][ii][h*wk*nk+w*nk+n], h*wk*nk+w*nk+n)
 								// now in the third dimension of image, it has shape (wk * hk * nk)
@@ -423,29 +503,7 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 		}
 	}
 
-	////////////////////////////// Module 3: Back Propagation
-	// Back Propagation: Where kernel and bias would be updated
-	// The following nested loop update the kernel according to both the kernel gradient and the learning rate
-	// the outmost loop1: iterate through all rows of the kernel ////
-	for i := 0; i < hk; i++ {
-		// the second outmost loop2: iterate through all columns of the kernel ///
-		for ii := 0; ii < wk; ii++ {
-			// the third outmost loop3: iterate through all channels of this pixel //
-			for iii := 0; iii < ck; iii++ {
-				// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
-				for iiii := 0; iiii < nk; iiii++ {
-					convL.Kernel[i][ii][iii][iiii] -= convL.KGradient[i][ii][iii][iiii] * lRate
-				}
-			}
-		}
-	}
-
-	// This one last loop update the biases
-	for i := 0; i < nk; i++ {
-		// update the bias according to both the bias gradient and the learning rate
-		convL.Bias[i] -= convL.BGradient[i] * lRate
-	}
-
-	////////////////////////////// Module 4: Return AT LAST
-	return deltaBackward
+	// This function has no return
+	// All computations make local upgrade to deltaBackward locally
 }
+

@@ -19,7 +19,6 @@ func main() {
 	path := "MINST"
 
 	m := Train(path, learning_rate, num_epoch, batch_size)
-	Train(path, learning_rate, num_epoch, batch_size)
 
 	//finish training
 	fmt.Println("End training process")
