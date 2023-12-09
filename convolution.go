@@ -5,13 +5,16 @@
 // It has a function created to initialize a "Convolution" struct, which is a single convolution layer
 // This script was developed by Dunhan Jiang
 
+
 package main
+
 
 import (
 	"math"
 	"math/rand"
 	//"fmt"
 )
+
 
 // This is a struct for a single convolution layer
 type Convolution struct {
@@ -24,6 +27,8 @@ type Convolution struct {
 	BGradient []float64
 	ImageCol  [][][][]float64
 }
+
+
 
 // This InitializeConvolutionLayer function build a Convolution struct as one layer
 // This function takes as input one slice of ints as the intended kernel's shape,
@@ -48,21 +53,7 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 
 	// initialize "Kernel"
 	convLayer.Kernel = Copy4D(kernel)
-	/*
-	for i := 0; i < kernelShape[0]; i++ {
-		//convLayer.Kernel[i] = make([][][]float64, kernelShape[1])
-		for ii := 0; ii < kernelShape[1]; ii++ {
-			//convLayer.Kernel[i][ii] = make([][]float64, kernelShape[2])
-			for iii := 0; iii < kernelShape[2]; iii++ {
-				//convLayer.Kernel[i][ii][iii] = make([]float64, kernelShape[3])
-				for iiii := 0; iiii < kernelShape[3]; iiii++ {
-					convLayer.Kernel[i][ii][iii][iiii] = float64(rand.NormFloat64()) / scale
-					// convLayer.Kernel[i][ii][iii][iiii] = float64(0.1)
-				}
-			}
-		}
-	}
-	*/
+
 	// initialize "Bias"
 	convLayer.Bias = make([]float64, kernelShape[3])
 	for i := 0; i < len(convLayer.Bias); i++ {
@@ -91,6 +82,8 @@ func InitializeConvolutionLayer(kernel [][][][]float64, pad, stride, numImages i
 	pointer := &convLayer
 	return pointer
 }
+
+
 
 // This forward method is defined for a Conv struct, namely a convolutional layer, to compute the forward convolution
 // Regardless of the fact that it is a method, we have two input variable:
@@ -186,6 +179,8 @@ func (convL *Convolution) Forward(x [][][][]float64) [][][][]float64 {
 	return feature
 }
 
+
+
 // The PadLayer function takes as input one 4-dimension data plus one int parameter
 // The original 4-dimension data has shape: bx * cx * hx * wx
 // This function adds number of Pad zeros to the outer rim of the hx * wx dimension, such that the data
@@ -227,6 +222,8 @@ func PadLayer(data [][][][]float64, pad int) [][][][]float64 {
 	return dataNew
 }
 
+
+
 // The ImageToColumn function takes as input some parameters, including the following:
 // a single image of type [][][]float64, a feature map width of type int, a feature map heigt of type int,
 // a number of input image channels of type int, a number of kernel channels of type int,
@@ -234,12 +231,6 @@ func PadLayer(data [][][][]float64, pad int) [][][][]float64 {
 // This function reshape one input image data to a matrix for output, having feature_h rows and feature_w columns,
 // each "pixel" of this matrix correspond to an image patch of the given image, whoes shape is given by (wk * hk * ck).
 func ImageToColumn(image [][][]float64, feature_h, feature_w, ck, hk, wk, stride int) [][][]float64 {
-	// check whether image and kernel have the same number of channels, panic otherwise:
-	/*
-		if cx != ck {
-			panic("Error: the given image and kernel have different number of channels")
-		}
-	*/
 
 	// first initialize a [][][]float64 variable for output
 	imagePatches := make([][][]float64, feature_h)
@@ -267,8 +258,11 @@ func ImageToColumn(image [][][]float64, feature_h, feature_w, ck, hk, wk, stride
 			}
 		}
 	}
+
 	return imagePatches
 }
+
+
 
 // This backward method is defined for a Conv struct, namely a convolutional layer, to compute the back propagation
 // Regardless of the fact that it is a method, we have two input variable:
@@ -297,27 +291,7 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 	hd := len(delta[0][0])    // height
 	wd := len(delta[0][0][0]) // width
 
-	// fmt.Println("delta input:", bd, cd, hd, wd)
-	// fmt.Println("kernel size:", hk, wk, ck, nk)
-	// fmt.Println("Data size:", bx, cx, hx, wx)
-
 	////////////////////////////// Module 1: Compute kernel & bias gradients
-	// first initialize both the KGradient and BGradient fields to be all zeros to record necessary changes:
-	// for i := 0; i < hk; i++ {
-	// 	// the second outmost loop2: iterate through all columns of the kernel ///
-	// 	for ii := 0; ii < wk; ii++ {
-	// 		// the third outmost loop3: iterate through all channels of this pixel //
-	// 		for iii := 0; iii < ck; iii++ {
-	// 			// the fourth outmost loop4: iterate through all different kernels at this specific channel of pixel /
-	// 			for iiii := 0; iiii < nk; iiii++ {
-	// 				// initialize "KGradient" to be all zeros
-	// 				convL.KGradient[i][ii][iii][iiii] = float64(0)
-	// 				// initialize "BGradient" to be all zeros
-	// 				convL.BGradient[iiii] = float64(0)
-	// 			}
-	// 		}
-	// 	}
-	// }
 
 	// Then compute the weight of Kernel Gradient
 	// This nested loop compute the gradient of kernel weights
@@ -402,9 +376,6 @@ func (convL *Convolution) Backward(delta [][][][]float64, lRate float64) [][][][
 	} else {
 		deltaPad = delta
 	}
-	// fmt.Println(deltaPad[0])
-	// fmt.Println(deltaPad[1])
-	// fmt.Println(deltaPad[2])
 
 	// Notice that after potential padding, the "deltaPad" slice should have the same shape as "convL.Data"
 
