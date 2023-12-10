@@ -90,7 +90,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) (*
 
 	// training process
 	numImages := len(trainImages.Data)
-	for epoch := 0; epoch < 2; epoch++ {
+	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < numImages; i += batch_size {
 			// for epoch := 0; epoch < 1; epoch++ {
 			// 	for i := 0; i < 2; i ++ {

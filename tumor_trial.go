@@ -17,7 +17,8 @@ import (
 )
 
 // This Train function would load model and use traing set to improve the parameter of model layers.
-func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_size int) *Model_Mutiple {
+func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_size int) (*Model_Mutiple, []float64, []float64, int) {
+	step := 30
 	trainImages, err := LoadImageCSV(path + "/X_train.csv")
 	if err != nil {
 		panic("Load brain tumor dataset training image fail!")
@@ -130,8 +131,12 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 	//linear layer
 	linear := NewLinear(10*10*16, 2)
 
+	// store loss and accuracy
+	lossArr := make([]float64, 0)
+	accuracyArr := make([]float64, 0)
+
 	numImages := len(trainImages.Data)
-	for epoch := 0; epoch < 3; epoch++ {
+	for epoch := 0; epoch < num_epoch; epoch++ {
 		for i := 0; i < numImages; i += batch_size {
 			if i > numImages-batch_size {
 				continue
@@ -204,8 +209,24 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 
 			conv_1.Backward(delta_8, learning_rate)
 
-			if i%30 == 0 {
+			if i%step == 0 {
 				fmt.Printf("Epoch-%d-%05d : loss:%.4f\n", epoch, i, loss)
+				lossArr = append(lossArr, loss)
+			}
+			if i%step == 0 {
+				tempModel := Model_Mutiple{
+					kernel_1: conv_1.Kernel,
+					kernel_2: conv_2.Kernel,
+					kernel_3: conv_3.Kernel,
+					kernel_4: conv_4.Kernel,
+					bias_1:   conv_1.Bias,
+					bias_2:   conv_2.Bias,
+					bias_3:   conv_3.Bias,
+					bias_4:   conv_4.Bias,
+					weight:   linear.W,
+					bias:     linear.b,
+				}
+				accuracyArr = append(accuracyArr, EvaluateBrainTumor(path, batch_size, tempModel))
 			}
 		}
 		learning_rate *= float64(math.Pow(0.95, float64(epoch+1)))
@@ -224,7 +245,7 @@ func TrainBrainTumor(path string, learning_rate float64, num_epoch int, batch_si
 		weight:   linear.W,
 		bias:     linear.b,
 	}
-	return &m
+	return &m, lossArr, accuracyArr, step
 }
 
 func EvaluateBrainTumor(path string, batch_size int, m Model_Mutiple) float64 {
@@ -394,7 +415,7 @@ func LoadLabelCSV(labelFile string) ([][]float64, error) {
 	}
 
 	numLabels := len(records[0])
-	fmt.Println(numLabels)
+	// fmt.Println(numLabels)
 	labelData := make([][]float64, numLabels)
 	for i := 0; i < numLabels; i++ {
 		labelData[i] = make([]float64, 2)
