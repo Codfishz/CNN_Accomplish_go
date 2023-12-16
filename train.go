@@ -91,7 +91,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) (*
 	// training process
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < num_epoch; epoch++ {
-		for i := 0; i < 2200; i += batch_size {
+		for i := 0; i < numImages; i += batch_size {
 			// for epoch := 0; epoch < 1; epoch++ {
 			// 	for i := 0; i < 2; i ++ {
 			//get batch data
@@ -276,8 +276,7 @@ func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 	return labelData, nil
 }
 
-
-func Store2DArray(filename string, arr []float64, step int)  {
+func Store2DArray(filename string, arr []float64, step int) {
 	Array2D := make([][]float64, len(arr))
 
 	// for each row, first column is step, second column is loss or accuracy
@@ -293,22 +292,22 @@ func Store2DArray(filename string, arr []float64, step int)  {
 	}
 
 	file, err := os.Create(filename + ".txt")
-    if err != nil {
-        panic(err)
-    }
-    defer file.Close()
+	if err != nil {
+		panic(err)
+	}
+	defer file.Close()
 
-    // Write the 2D array to the file
-    for _, row := range Array2D {
-        for _, col := range row {
-            _, err := fmt.Fprintf(file, "%f\t", col)
-            if err != nil {
-                panic(err)
-            }
-        }
-        _, err := fmt.Fprintln(file)
-        if err != nil {
-            panic(err)
-        }
-    }
+	// Write the 2D array to the file
+	for _, row := range Array2D {
+		for _, col := range row {
+			_, err := fmt.Fprintf(file, "%f\t", col)
+			if err != nil {
+				panic(err)
+			}
+		}
+		_, err := fmt.Fprintln(file)
+		if err != nil {
+			panic(err)
+		}
+	}
 }
