@@ -1,3 +1,10 @@
+// 02-601: Programming for Scientist
+// Final Project: Construct Convolutional Neural Network From Scratch Using GOlang
+// This is pooling layer.
+// Forward takes the input data x and returns the output data after max pooling.
+// Backward takes the gradient from the next layer delta and returns the gradient for the previous layer dx.
+// This script was developed by Wanxing Zhang.
+
 package main
 
 import (

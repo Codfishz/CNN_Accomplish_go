@@ -198,7 +198,7 @@ func LoadImagesFromFile(imageFile string) (*Tensor, error) {
 
 	reader := bufio.NewReader(file)
 
-	// The first 4 bytes repmagic number，用于标识文件类型.discard
+	// The first 4 bytes repmagic number.
 	reader.Discard(4)
 
 	//because data type is unit 32, so each time binary.read would loaod 4 bytes
@@ -249,7 +249,7 @@ func LoadLabelsFromFile(labelFile string) ([][]float64, error) {
 
 	reader := bufio.NewReader(file)
 
-	//前四个字节是魔数magic number，用于标识文件类型.discard
+	// The first 4 bytes repmagic number.
 	reader.Discard(4)
 
 	var numLabels uint32

@@ -1,3 +1,9 @@
+// 02-601: Programming for Scientist
+// Final Project: Construct Convolutional Neural Network From Scratch Using GOlang
+// This is fully-connected layer, which is used in the end of the network.
+// It has a function created to initialize a "Linear" struct, which is a single fully-connected layer.
+// Forward and Backward methods are also included in this script.
+// This script was developed by Wanxing Zhang.
 package main
 
 import (
@@ -53,7 +59,8 @@ func NewLinear(inChannel, outChannel int) *Linear {
 	}
 }
 
-// Forward computes the forward pass of the linear layer.
+// Linear.Forward takes the input x and returns the output of the layer.
+// x: input data, batchSize * inChannel
 func (l *Linear) Forward(x [][]float64) [][]float64 {
 	// copy x to l.x
 	l.x = make([][]float64, len(x))
@@ -63,7 +70,6 @@ func (l *Linear) Forward(x [][]float64) [][]float64 {
 			l.x[i][j] = x[i][j]
 		}
 	}
-
 
 	xForward := make([][]float64, len(x)) // next layer input
 
@@ -82,7 +88,8 @@ func (l *Linear) Forward(x [][]float64) [][]float64 {
 	return xForward
 }
 
-// Backward computes the backward pass of the linear layer.
+// Linear.Backward takes the gradient from the next layer delta and returns the gradient for the previous layer dx.
+// delta: gradient from the next layer (b * outChannel).
 func (l *Linear) Backward(delta [][]float64, learningRate float64) [][]float64 {
 	batchSize := len(delta)
 	deltaBackward := make([][]float64, batchSize) // previous layer delta
