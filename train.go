@@ -21,7 +21,7 @@ import (
 func Train(path string, learning_rate float64, num_epoch int, batch_size int) (*Model, []float64, []float64, int) {
 
 	// every step images, print loss and accuracy
-	step := 3000
+	step := 300
 
 	trainImages, err := LoadImagesFromFile(path + "/train-images-idx3-ubyte/train-images-idx3-ubyte")
 	if err != nil {
@@ -91,7 +91,7 @@ func Train(path string, learning_rate float64, num_epoch int, batch_size int) (*
 	// training process
 	numImages := len(trainImages.Data)
 	for epoch := 0; epoch < num_epoch; epoch++ {
-		for i := 0; i < numImages; i += batch_size {
+		for i := 0; i < 2200; i += batch_size {
 			// for epoch := 0; epoch < 1; epoch++ {
 			// 	for i := 0; i < 2; i ++ {
 			//get batch data
